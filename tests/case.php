@@ -4,6 +4,9 @@ $case = $argv[1];
 try {
     if ( 'render' === $case ) {
         load_subject();
+        // Match the settings-page context normally set by wp-admin/admin.php.
+        $GLOBALS['pagenow'] = 'options-general.php';
+        $GLOBALS['plugin_page'] = 'wp-discord-post';
         $admin = new WP_Discord_Post_Admin();
         $uris = array(
             '/wp-admin/options-general.php/" data-bf-probe="marker"?page=wp-discord-post',
