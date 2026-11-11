@@ -1,0 +1,32 @@
+name: Verify security fork
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_sqlite, sqlite3, dom, mbstring, curl
+          coverage: none
+      - run: python3 scripts/setup_test_env.py
+      - run: php tests/install.php
+        env:
+          WP_TEST_ROOT: ${{ github.workspace }}/.test-env/wordpress
+      - run: php tests/run.php
+        env:
+          WP_TEST_ROOT: ${{ github.workspace }}/.test-env/wordpress
+      - run: find includes tests scripts -name '*.php' -print0 | xargs -0 -n1 php -l && php -l wp-discord-post.php
+      - run: python3 scripts/build.py
+      - run: python3 tests/check_package.py
+      - run: unzip -q dist/wp-discord-post-blackfury-2.1.1.zip -d .test-env/wordpress/wp-content/plugins
+      - run: php tests/install-package.php
+        env:
+          WP_TEST_ROOT: ${{ github.workspace }}/.test-env/wordpress
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wp-discord-post-blackfury
+          path: dist/*

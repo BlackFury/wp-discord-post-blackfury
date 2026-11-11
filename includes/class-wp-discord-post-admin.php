@@ -56,6 +56,10 @@ class WP_Discord_Post_Admin {
 			submit_button( __( 'Save Settings', 'wp-discord-post' ) );
 			?>
 			</form>
+			<form id="wp-discord-post-dank-meme-form" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
+				<input type="hidden" name="action" value="wp_discord_post_send_dank_meme" />
+				<?php wp_nonce_field( 'wp_discord_post_send_dank_meme', '_wpnonce', false ); ?>
+			</form>
 		</div>
 		<?php
 	}
@@ -586,7 +590,7 @@ class WP_Discord_Post_Admin {
 	 * Prints the Hit Me! field.
 	 */
 	public function print_send_dank_meme_field() {
-		echo '<a href="' . add_query_arg( 'dank_meme', 'yes' ) . '" title="' . esc_attr__( 'Send Dank Meme!', 'wp-discord-post' ) . '" class="button primary">' . esc_html__( 'Send Dank Meme!', 'wp-discord-post' ) . '</a>';
+		echo '<button type="submit" form="wp-discord-post-dank-meme-form" class="button primary">' . esc_html__( 'Send Dank Meme!', 'wp-discord-post' ) . '</button>';
 		echo '<br><br><span class="description">' . esc_html__( 'You do this at your own risk... there is no coming back from the dank world.', 'wp-discord-post' ) . '</span>';
 	}
 

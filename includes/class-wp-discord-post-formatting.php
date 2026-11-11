@@ -93,7 +93,7 @@ class WP_Discord_Post_Formatting {
 		}
 
 		if ( wp_discord_post_is_logging_enabled() ) {
-			error_log( print_r( $args, true ) );
+			error_log( 'WP Discord Post - Embed prepared (private data omitted).' );
 		}
 
 		return $args;

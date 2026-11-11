@@ -5,15 +5,18 @@
  * @author      Nicola Mustone
  * @license     GPL-2.0+
  *
- * Plugin Name: WP Discord Post
+ * Plugin Name: WP Discord Post - BlackFury
  * Plugin URI:  https://wordpress.org/plugins/wp-discord-post/
  * Description: A Discord integration that sends a message on your desired Discord server and channel for every new post published.
- * Version:     2.1.0
+ * Version:     2.1.1
+ * Update URI:  false
+ * Requires at least: 5.8
+ * Requires PHP: 7.4
  * Author:      Nicola Mustone
  * Author URI:  https://nicola.blog/
  * Text Domain: wp-discord-post
  *
- * WC tested up to: 3.4.4
+ * Original author retained; security maintenance: BlackFury contributors.
  *
  * License:     GPL-2.0+
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt

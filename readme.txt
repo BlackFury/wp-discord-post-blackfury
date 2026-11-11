@@ -1,15 +1,23 @@
-=== WP Discord Post ===
+=== WP Discord Post - BlackFury ===
 Contributors: nicolamustone
 Tags: discord, post, publish, server, chat, gaming, streaming, twitch, community, blog, woocommerce, contact form 7, jetpack
-Requires at least: 4.4
-Tested up to: 4.9.7
-Stable tag: 2.1.0
-License: GPLv2
+Requires at least: 5.8
+Requires PHP: 7.4
+Stable tag: 2.1.1
+License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 WP Discord Post uses a Discord bot and Webhook URL to write in a channel in a Discord server when a post is published on a blog.
 
 == Description ==
+
+BlackFury security fork of WP Discord Post 2.1.0 by Nicola Mustone.
+Version 2.1.1 replaces the unsafe meme GET link with a capability- and nonce-protected POST action,
+uses HTTPS for Giphy and omits private request data from debug logs.
+Keep the folder wp-discord-post and the existing database settings when upgrading.
+Update URI is false: no WordPress.org updates and no automatic GitHub updater.
+See README.md and docs for the audit, exact test scope, deployment and rollback.
+The legacy integration descriptions below are retained from upstream, not a claim of current compatibility.
 
 WP Discord Post is a free plugin for WordPress that uses a Discord bot and Webhook URL to write in your desired channel in your Discord server whenever a new post is published on your blog.
 

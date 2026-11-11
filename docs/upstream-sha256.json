@@ -1,0 +1,14 @@
+{
+  "includes/class-wp-discord-post-admin.php": "2423ac51b4676ff14096fabdaeb0acf0458b4a1c482a0651da39f96f823e2b29",
+  "includes/class-wp-discord-post-contact-form-7.php": "b580166cc0c17c808e93e0052c12c0cd9800eecfc78098da54685818d16adc2d",
+  "includes/class-wp-discord-post-dank-meme.php": "fba8ceeacbdaecfbbf03c8454958cc8d0b1b69298d93a1e475d00900b168eda8",
+  "includes/class-wp-discord-post-formatting.php": "e69272128aef69274012d7f1407e397550436428f95c97c235644eb915f7184f",
+  "includes/class-wp-discord-post-gravityforms.php": "d85a0698f747cfa101bf319dda87953021cc6fb169d8b7d47ce93289fa1f84ee",
+  "includes/class-wp-discord-post-http.php": "92a6db9f1f0a5136df3fc863da1ab3f147e5988616fc04b697bb4c5b45b270d0",
+  "includes/class-wp-discord-post-jetpack-contact-form.php": "71ed09614241e063d1353c0979c045af251107b07a9a22ba7d6f9a88f8ca0215",
+  "includes/class-wp-discord-post-post.php": "264830a8612bbbbedc16ebaeb21d4e81ead7ac0b976f03849fa4bec2b5c6f1b9",
+  "includes/class-wp-discord-post-woocommerce.php": "34087ff825e9d2bc264c62bc55bb55eb989a232c0008669ede6293e71658dc6b",
+  "includes/functions-general.php": "410ac43b0cc9b0e720b8e918216e60ab3fc606856b4d09770b3815bb02b7e9ff",
+  "readme.txt": "3eb8101578787f92e7605fc7c51297fbf902177b3eae095e5c2b5572ad9fe1f8",
+  "wp-discord-post.php": "0d84e513c543cf86e5866d9d270f2070e7e72e02e2fa56930100fd864a420c35"
+}

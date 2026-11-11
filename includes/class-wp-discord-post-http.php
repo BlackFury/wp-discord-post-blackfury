@@ -195,7 +195,7 @@ class WP_Discord_Post_HTTP {
 			$this->_set_post_meta( $id );
 		} else {
 			if ( wp_discord_post_is_logging_enabled() ) {
-				error_log( sprintf( 'WP Discord Post - Request not sent. %s', $response->get_error_message() ) );
+				error_log( 'WP Discord Post - Request not sent (transport error).' );
 			}
 		}
 
@@ -232,7 +232,7 @@ class WP_Discord_Post_HTTP {
 		) );
 
 		if ( wp_discord_post_is_logging_enabled() ) {
-			error_log( print_r( $request, true ) );
+			error_log( 'WP Discord Post - Sending request (private data omitted).' );
 		}
 
 		do_action( 'wp_discord_post_before_request', $request, $this->get_webhook_url() );
