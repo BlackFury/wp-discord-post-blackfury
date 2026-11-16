@@ -187,7 +187,8 @@ class WP_Discord_Post_HTTP {
 	public function process( $content = '', $embed = array(), $id = 0 ) {
 		$response = $this->_send_request( $content, $embed );
 
-		if ( ! is_wp_error( $response ) ) {
+		$code = (int) wp_remote_retrieve_response_code( $response );
+		if ( $code >= 200 && $code < 300 ) {
 			if ( wp_discord_post_is_logging_enabled() ) {
 				error_log( 'WP Discord Post - Request sent.' );
 			}
@@ -195,10 +196,51 @@ class WP_Discord_Post_HTTP {
 			$this->_set_post_meta( $id );
 		} else {
 			if ( wp_discord_post_is_logging_enabled() ) {
-				error_log( 'WP Discord Post - Request not sent (transport error).' );
+				error_log( 'WP Discord Post - Request not confirmed.' );
 			}
 		}
 
+		return $response;
+	}
+
+	/** Execute a Discord webhook and ask Discord to return the created message. */
+	public function relay( $url, $content, $embed = array(), $allow_everyone = false, $color = '' ) {
+		if ( ! BlackFury_Relay::is_webhook( $url, true ) ) {
+			return new WP_Error( 'relay_invalid_destination' );
+		}
+
+		$payload = array(
+			'content'          => wp_html_excerpt( wp_strip_all_tags( html_entity_decode( $content, ENT_QUOTES, 'UTF-8' ) ), 2000 ),
+			'allowed_mentions' => array( 'parse' => $allow_everyone ? array( 'everyone' ) : array() ),
+		);
+		if ( $this->get_username() ) {
+			$payload['username'] = $this->get_username();
+		}
+		if ( $this->get_avatar() ) {
+			$payload['avatar_url'] = $this->get_avatar();
+		}
+		if ( $embed ) {
+			$payload['embeds'] = WP_Discord_Post_Formatting::get_embed( $embed );
+			if ( $color ) {
+				$payload['embeds'][0]['color'] = hexdec( substr( $color, 1 ) );
+			}
+		}
+		$payload = apply_filters( 'wp_discord_post_request_body_args', $payload );
+		$payload['allowed_mentions'] = array( 'parse' => $allow_everyone ? array( 'everyone' ) : array() );
+		$body = wp_json_encode( $payload );
+		if ( false === $body ) {
+			return new WP_Error( 'relay_invalid_message' );
+		}
+		$url = add_query_arg( 'wait', 'true', $url );
+		$request = array(
+			'headers'     => array( 'Content-Type' => 'application/json' ),
+			'body'        => $body,
+			'timeout'     => 10,
+			'redirection' => 0,
+		);
+		do_action( 'wp_discord_post_before_request', $request, $url );
+		$response = wp_safe_remote_post( $url, $request );
+		do_action( 'wp_discord_post_after_request', $response );
 		return $response;
 	}
 

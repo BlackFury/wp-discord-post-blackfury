@@ -5,7 +5,8 @@ try {
     $plugin = 'wp-discord-post/wp-discord-post.php';
     expect_true( is_file( WP_PLUGIN_DIR . '/' . $plugin ), 'Extract the built ZIP into the disposable plugins directory first.' );
     $metadata = get_plugin_data( WP_PLUGIN_DIR . '/' . $plugin, false, false );
-    expect_true( '2.1.1' === $metadata['Version'], 'Wrong installed version.' );
+    $source = get_plugin_data( dirname( __DIR__ ) . '/wp-discord-post.php', false, false );
+    expect_true( $source['Version'] === $metadata['Version'] && 'BlackFury Relay' === $metadata['Name'], 'Wrong installed version or identity.' );
     expect_true( 'false' === $metadata['UpdateURI'], 'WordPress.org update exclusion missing.' );
     $id = wp_insert_post( array( 'post_title' => 'Synthetic pre-existing marker', 'post_status' => 'draft' ) );
     add_post_meta( $id, '_wp_discord_post_published', 'yes' );

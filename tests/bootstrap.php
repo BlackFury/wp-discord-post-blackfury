@@ -38,7 +38,10 @@ add_filter( 'pre_http_request', function ( $pre, $args, $url ) {
     if ( false !== strpos( $url, 'api.giphy.com/' ) ) {
         return array( 'headers' => array(), 'body' => '{"data":{"embed_url":"https://giphy.com/embed/synthetic"}}', 'response' => array( 'code' => 200, 'message' => 'OK' ), 'cookies' => array() );
     }
-    if ( 'https://example.invalid/synthetic-webhook' === $url ) {
+    if ( 'https://example.invalid/synthetic-webhook' === strtok( $url, '?' ) ) {
+        if ( false !== strpos( $url, 'wait=true' ) ) {
+            return array( 'headers' => array(), 'body' => '{"id":"123456789012345678","channel_id":"234567890123456789"}', 'response' => array( 'code' => 200, 'message' => 'OK' ), 'cookies' => array() );
+        }
         return array( 'headers' => array(), 'body' => '', 'response' => array( 'code' => 204, 'message' => 'No Content' ), 'cookies' => array() );
     }
     return new WP_Error( 'test_network_blocked', 'All real network requests are blocked in tests.' );
@@ -70,6 +73,8 @@ $GLOBALS['fixture_options'] = array(
     'wp_discord_order_message_format' => '%order_number% %order_total%',
 );
 foreach ( $GLOBALS['fixture_options'] as $key => $value ) { update_option( $key, $value ); }
+delete_option( 'blackfury_relay_channels' );
+delete_option( 'blackfury_relay_default' );
 $GLOBALS['admin_id'] = get_user_by( 'login', 'test-admin' )->ID;
 $subscriber = get_user_by( 'login', 'test-subscriber' );
 $GLOBALS['subscriber_id'] = $subscriber ? $subscriber->ID : wp_insert_user( array( 'user_login' => 'test-subscriber', 'user_pass' => bin2hex( random_bytes( 24 ) ), 'role' => 'subscriber' ) );

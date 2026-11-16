@@ -18,7 +18,19 @@ class WP_Discord_Post_Post {
 	 * Adds the hook to handle posts.
 	 */
 	public function __construct() {
-		add_action( 'publish_post', array( $this, 'send' ), 10, 2 );
+		new BlackFury_Relay( $this );
+	}
+
+	/** Compose the same editorial card for the preview and the queued delivery. */
+	public function preview( WP_Post $post, $with_embed = true ) {
+		$embed = $with_embed ? $this->_prepare_embed( $post->ID, $post ) : array();
+		if ( $embed ) {
+			$embed['description'] = $post->post_excerpt
+				? wp_trim_words( wp_strip_all_tags( $post->post_excerpt ), 55 )
+				: $embed['description'];
+			$embed['title'] = wp_html_excerpt( $embed['title'], 256 );
+		}
+		return array( 'content' => $this->_prepare_content( $post->ID, $post ), 'embed' => $embed );
 	}
 
 	/**
@@ -91,7 +103,7 @@ class WP_Discord_Post_Post {
 	private function _prepare_content( $id, $post ) {
 		$author = $post->post_author;
 		$author = get_user_by( 'ID', $author );
-		$author = $author->display_name;
+		$author = $author ? $author->display_name : '';
 
 		$mention_everyone = get_option( 'wp_discord_post_mention_everyone' );
 		$message_format   = get_option( 'wp_discord_post_message_format' );

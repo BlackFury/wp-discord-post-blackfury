@@ -1,4 +1,6 @@
-# WP Discord Post — BlackFury
+# BlackFury Relay
+
+**2.2.0-beta.1** ajoute le routage des articles, l'aperçu Discord dans l'éditeur, une file de livraison et un journal. Voir le [guide de la bêta](docs/RELAY.md). Les références à 2.1.1 ci-dessous décrivent la version précédente et son correctif ciblé.
 
 Fork de sécurité **2.1.1**, basé sur WP Discord Post 2.1.0 de **Nicola Mustone**,
 licence **GPL-2.0-or-later**. Projet local préparé pour un dépôt GitHub public.
@@ -20,7 +22,7 @@ complète des intégrations historiques.
 ## Installer
 
 Lire **[la procédure de déploiement et de retour arrière](docs/DEPLOYMENT.md)**.
-Utiliser `dist/wp-discord-post-blackfury-2.1.1.zip`. Sa racine doit être
+Utiliser `dist/blackfury-relay-2.2.0-beta.1.zip`. Sa racine doit être
 `wp-discord-post/`, avec `wp-discord-post.php` directement dedans.
 Ne pas utiliser le ZIP automatique « Source code » de GitHub comme extension.
 

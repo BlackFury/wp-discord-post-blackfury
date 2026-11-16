@@ -86,12 +86,17 @@ try {
         $id = wp_insert_post( array( 'post_title' => 'Synthetic publish probe', 'post_content' => 'Synthetic only', 'post_author' => $GLOBALS['admin_id'], 'post_status' => 'draft' ) );
         $GLOBALS['requests'] = array();
         wp_publish_post( $id );
+        expect_true( 0 === count( $GLOBALS['requests'] ), 'Publishing must not wait for Discord.' );
+        do_action( 'blackfury_relay_deliver', $id );
         expect_true( 1 === count( $GLOBALS['requests'] ), 'Publication must send once.' );
         expect_true( 'yes' === get_post_meta( $id, '_wp_discord_post_published', true ), 'Missing publication marker.' );
         $payload = json_decode( $GLOBALS['requests'][0]['args']['body'], true );
         expect_true( false !== strpos( $payload['content'], 'Synthetic publish probe' ), 'Published title missing.' );
         wp_update_post( array( 'ID' => $id, 'post_title' => 'Synthetic edited probe' ) );
+        do_action( 'blackfury_relay_deliver', $id );
         expect_true( 1 === count( $GLOBALS['requests'] ), 'Updating an article sent a duplicate.' );
+    } elseif ( 0 === strpos( $case, 'relay-' ) ) {
+        require __DIR__ . '/relay-cases.php';
     } elseif ( 'routing' === $case ) {
         load_subject();
         expect_true( has_action( 'admin_post_wp_discord_post_send_dank_meme' ), 'Authenticated send route is missing.' );

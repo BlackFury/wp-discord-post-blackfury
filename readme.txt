@@ -1,17 +1,19 @@
-=== WP Discord Post - BlackFury ===
+=== BlackFury Relay ===
 Contributors: nicolamustone
 Tags: discord, post, publish, server, chat, gaming, streaming, twitch, community, blog, woocommerce, contact form 7, jetpack
 Requires at least: 5.8
 Requires PHP: 7.4
-Stable tag: 2.1.1
+Stable tag: 2.2.0-beta.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-WP Discord Post uses a Discord bot and Webhook URL to write in a channel in a Discord server when a post is published on a blog.
+Preview, route and track WordPress article notifications sent to Discord.
 
 == Description ==
 
-BlackFury security fork of WP Discord Post 2.1.0 by Nicola Mustone.
+BlackFury Relay builds on WP Discord Post 2.1.0 by Nicola Mustone.
+The 2.2 beta adds webhook-only article delivery, saved-draft previews, category routing,
+per-article opt-out, and a delivery journal. See docs/RELAY.md for the beta guide.
 Version 2.1.1 replaces the unsafe meme GET link with a capability- and nonce-protected POST action,
 uses HTTPS for Giphy and omits private request data from debug logs.
 Keep the folder wp-discord-post and the existing database settings when upgrading.

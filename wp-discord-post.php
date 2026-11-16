@@ -5,10 +5,10 @@
  * @author      Nicola Mustone
  * @license     GPL-2.0+
  *
- * Plugin Name: WP Discord Post - BlackFury
- * Plugin URI:  https://wordpress.org/plugins/wp-discord-post/
- * Description: A Discord integration that sends a message on your desired Discord server and channel for every new post published.
- * Version:     2.1.1
+ * Plugin Name: BlackFury Relay
+ * Plugin URI:  https://github.com/BlackFury/wp-discord-post-blackfury
+ * Description: Preview, route and track WordPress article notifications sent to Discord.
+ * Version:     2.2.0-beta.1
  * Update URI:  false
  * Requires at least: 5.8
  * Requires PHP: 7.4
@@ -109,6 +109,8 @@ class WP_Discord_Post {
 		require_once( 'includes/class-wp-discord-post-admin.php' );
 		require_once( 'includes/class-wp-discord-post-http.php' );
 		require_once( 'includes/class-wp-discord-post-formatting.php' );
+		require_once( 'includes/class-blackfury-relay.php' );
+		require_once( 'includes/class-blackfury-relay-admin.php' );
 
 		if ( is_admin() ) {
 			require_once( 'includes/class-wp-discord-post-dank-meme.php' );

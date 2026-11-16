@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.2.0-beta.1 — BlackFury Relay
+
+- Nouveau parcours d'administration pour connecter et tester des salons.
+- Routage par catégorie, choix par article et aperçu dans les éditeurs WordPress.
+- File WP-Cron, acceptation confirmée par réponse Discord avec identifiant, reprise des limitations 429 et état incertain en cas de réponse perdue.
+- Journal par article, relance explicite et conservation des anciens réglages et marqueurs.
+
 ## 2.1.1 — BlackFury — 2026-11-11
 
 - Retire le lien `add_query_arg()` non échappé du bouton de mème.

@@ -1,0 +1,28 @@
+.bfr-wrap { max-width: 1180px; }
+.bfr-hero { padding: 26px 30px; margin: 22px 0; border-radius: 12px; color: #ececff; background: linear-gradient(110deg, #171b32, #332a68); }
+.bfr-hero h1 { color: #fff; font-size: 36px; font-weight: 700; line-height: 1.2; padding: 0; }
+.bfr-hero p { margin-bottom: 0; }
+.bfr-eyebrow { color: #b9b5ff; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.bfr-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.bfr-panel { background: #fff; border: 1px solid #dcdcde; border-radius: 10px; padding: 18px 20px; }
+.bfr-panel h2 { margin: 0 0 12px; font-size: 18px; }
+.bfr-stack { display: grid; gap: 10px; margin: 16px 0; }
+.bfr-stack label { font-weight: 600; }
+.bfr-stack input:not([type="color"]) { display: block; width: 100%; margin-top: 4px; font-weight: 400; }
+.bfr-stack .button { justify-self: start; }
+.bfr-channels li, .bfr-line { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; padding: 10px 0; border-top: 1px solid #eee; }
+.bfr-line label { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; flex: 1; }
+.bfr-channels summary { cursor: pointer; }
+.bfr-journal { margin-top: 18px; overflow-x: auto; }
+.bfr-status { display: inline-block; border-radius: 20px; padding: 2px 8px; font-weight: 600; background: #f0f0f1; color: #2c3338; }
+.bfr-accepted { color: #135c37; background: #e7f5ec; }
+.bfr-failed { color: #9b2335; background: #fcebed; }
+.bfr-uncertain, .bfr-pending { color: #704800; background: #fff3d6; }
+.bfr-retry { margin-top: 8px; }
+.bfr-retry label { display: block; margin-bottom: 5px; }
+.bfr-preview { max-width: 570px; padding: 16px; border-radius: 9px; color: #f1f2f5; background: #2b2d36; }
+.bfr-preview p { overflow-wrap: anywhere; white-space: pre-wrap; }
+.bfr-embed { border-left: 4px solid var(--bfr-accent); border-radius: 5px; background: #20222a; padding: 12px; }
+.bfr-embed strong { color: #b9b5ff; }
+.bfr-embed img { display: block; max-width: 100%; max-height: 220px; border-radius: 4px; }
+@media (max-width: 900px) { .bfr-grid { grid-template-columns: 1fr; } }
