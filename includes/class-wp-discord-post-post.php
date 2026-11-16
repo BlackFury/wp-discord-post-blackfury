@@ -13,12 +13,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Main class to handle posts.
  */
-class WP_Discord_Post_Post {
+class BlackFury_Relay_Plugin_Post {
 	/**
 	 * Adds the hook to handle posts.
 	 */
 	public function __construct() {
-		new BlackFury_Relay( $this );
+		new BlackFury_Relay_Delivery( $this );
 	}
 
 	/** Compose the same editorial card for the preview and the queued delivery. */
@@ -41,18 +41,18 @@ class WP_Discord_Post_Post {
 	 */
 	public function send( $id, $post ) {
 		// Check if the post has been already published and if it should be processed.
-		if ( ! apply_filters( 'wp_discord_post_is_new_post', $this->is_new_post( $post ), $post ) ) {
+		if ( ! apply_filters( 'blackfury_relay_post_is_new_post', $this->is_new_post( $post ), $post ) ) {
 			return;
 		}
 
 		$content = $this->_prepare_content( $id, $post );
 		$embed   = array();
 
-		if ( ! wp_discord_post_is_embed_enabled() ) {
+		if ( ! blackfury_relay_post_is_embed_enabled() ) {
 			$embed   = $this->_prepare_embed( $id, $post );
 		}
 
-		$http = new WP_Discord_Post_HTTP( 'post' );
+		$http = new BlackFury_Relay_Plugin_HTTP( 'post' );
 		return $http->process( $content, $embed, $id );
 	}
 
@@ -68,7 +68,7 @@ class WP_Discord_Post_Post {
 		$post_date    = date( 'Y-m-d H', strtotime( $post->post_date ) );
 		$current_time = current_time( 'Y-m-d H' );
 
-		if ( wp_discord_post_is_logging_enabled() ) {
+		if ( blackfury_relay_post_is_logging_enabled() ) {
 			error_log( print_r( array(
 				'id'           => $id,
 				'status'       => $post_status,
@@ -78,17 +78,17 @@ class WP_Discord_Post_Post {
 		}
 
 		if ( $post_date < $current_time ) {
-			if ( wp_discord_post_is_logging_enabled() ) {
+			if ( blackfury_relay_post_is_logging_enabled() ) {
 				error_log( sprintf( 'WP Discord Post - Post %d is not a new post. Skipping.', $id ) );
 			}
 
 			return false;
 		} else {
-			if ( wp_discord_post_is_logging_enabled() ) {
-				error_log( sprintf( 'WP Discord Post - Post %d maybe is new. _wp_discord_post_published = %s', $id, 'yes' === get_post_meta( $id, '_wp_discord_post_published', true ) ) );
+			if ( blackfury_relay_post_is_logging_enabled() ) {
+				error_log( sprintf( 'WP Discord Post - Post %d maybe is new. _blackfury_relay_published = %s', $id, 'yes' === get_post_meta( $id, '_blackfury_relay_published', true ) ) );
 			}
 
-			return 'yes' !== get_post_meta( $id, '_wp_discord_post_published', true ) && ! wp_is_post_revision( $id );
+			return 'yes' !== get_post_meta( $id, '_blackfury_relay_published', true ) && ! wp_is_post_revision( $id );
 		}
 	}
 
@@ -105,8 +105,8 @@ class WP_Discord_Post_Post {
 		$author = get_user_by( 'ID', $author );
 		$author = $author ? $author->display_name : '';
 
-		$mention_everyone = get_option( 'wp_discord_post_mention_everyone' );
-		$message_format   = get_option( 'wp_discord_post_message_format' );
+		$mention_everyone = get_option( 'blackfury_relay_post_mention_everyone' );
+		$message_format   = get_option( 'blackfury_relay_post_message_format' );
 
 		$content = str_replace(
 			array( '%title%', '%author%', '%url%', '%post_type%' ),
@@ -115,14 +115,14 @@ class WP_Discord_Post_Post {
 		);
 
 		if ( empty( $content ) ) {
-			$content = sprintf( esc_html__( '%1$s just published the %2$s %3$s on their blog: %4$s', 'wp-discord-post' ), $author, get_post_type( $id ), esc_html( $post->post_title ), get_permalink( $id ) );
+			$content = sprintf( esc_html__( '%1$s just published the %2$s %3$s on their blog: %4$s', 'blackfury-relay' ), $author, get_post_type( $id ), esc_html( $post->post_title ), get_permalink( $id ) );
 		}
 
 		if ( 'yes' === $mention_everyone && false === strpos( $content, '@everyone' ) ) {
 			$content = '@everyone ' . $content;
 		}
 
-		$content = apply_filters( 'wp_discord_post_post_content', $content, $post );
+		$content = apply_filters( 'blackfury_relay_post_post_content', $content, $post );
 
 		return $content;
 	}
@@ -136,8 +136,8 @@ class WP_Discord_Post_Post {
 	 * @access private
 	 */
 	private function _prepare_embed( $id, $post ) {
-		$thumbnail = WP_Discord_Post_Formatting::get_thumbnail( $id );
-		$text      = WP_Discord_Post_Formatting::get_description( $post );
+		$thumbnail = BlackFury_Relay_Plugin_Formatting::get_thumbnail( $id );
+		$text      = BlackFury_Relay_Plugin_Formatting::get_description( $post );
 
 		$embed = array(
 			'title'       => html_entity_decode( get_the_title( $id ) ),
@@ -151,22 +151,22 @@ class WP_Discord_Post_Post {
 
 		if ( ! empty( get_the_category_list() ) ) {
 			$embed['fields'][] = array(
-				'name'  => esc_html__( 'Categories', 'wp-discord-post' ),
+				'name'  => esc_html__( 'Categories', 'blackfury-relay' ),
 				'value' => strip_tags( get_the_category_list( ', ', '', $id ) ),
 			);
 		}
 
 		if ( ! empty( get_the_tag_list() ) ) {
 			$embed['fields'][] = array(
-				'name'  => esc_html__( 'Tags', 'wp-discord-post' ),
+				'name'  => esc_html__( 'Tags', 'blackfury-relay' ),
 				'value' => strip_tags( get_the_tag_list( '', ', ', '', $id ) ),
 			);
 		}
 
-		$embed = apply_filters( 'wp_discord_post_post_embed', $embed, $post );
+		$embed = apply_filters( 'blackfury_relay_post_post_embed', $embed, $post );
 
 		return $embed;
 	}
 }
 
-return new WP_Discord_Post_Post();
+return new BlackFury_Relay_Plugin_Post();

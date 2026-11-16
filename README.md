@@ -1,10 +1,9 @@
 # BlackFury Relay
 
-**2.2.0-beta.1** ajoute le routage des articles, l'aperçu Discord dans l'éditeur, une file de livraison et un journal. Voir le [guide de la bêta](docs/RELAY.md). Les références à 2.1.1 ci-dessous décrivent la version précédente et son correctif ciblé.
+**2.2.0-beta.2** ajoute une identité indépendante, un import depuis WP Discord Post et les mises à jour via GitHub. Relay comprend aussi le routage des articles, l'aperçu Discord, une file de livraison et un journal. Voir le [guide de la bêta](docs/RELAY.md).
 
-Fork de sécurité **2.1.1**, basé sur WP Discord Post 2.1.0 de **Nicola Mustone**,
-licence **GPL-2.0-or-later**. Projet local préparé pour un dépôt GitHub public.
-La présence de ces fichiers ne signifie pas que le dépôt ou une release ont été publiés.
+Relay est basé sur WP Discord Post 2.1.0 de **Nicola Mustone**, sous licence
+**GPL-2.0-or-later**. Le correctif historique date de la version 2.1.1.
 
 ## Correctif
 
@@ -12,7 +11,7 @@ La présence de ces fichiers ne signifie pas que le dépôt ou une release ont �
 - Envoi par POST uniquement, avec droit `manage_options` et nonce spécifique.
 - URL d'action et redirection fixes; Giphy en HTTPS.
 - Jeton, contenu des messages et détails privés retirés des journaux de requêtes.
-- Dossier, fichier principal, options et marqueur anti-doublon conservés.
+- Options et marqueurs anti-doublon importables depuis la version historique.
 
 Le défaut local est reproduit et corrigé. Le lien exact avec **CVE-2025-26554**
 reste une hypothèse cohérente avec l'avis public, sans validation du déclarant.
@@ -22,14 +21,19 @@ complète des intégrations historiques.
 ## Installer
 
 Lire **[la procédure de déploiement et de retour arrière](docs/DEPLOYMENT.md)**.
-Utiliser `dist/blackfury-relay-2.2.0-beta.1.zip`. Sa racine doit être
-`wp-discord-post/`, avec `wp-discord-post.php` directement dedans.
+Utiliser `dist/blackfury-relay-2.2.0-beta.2.zip`. Sa racine est désormais
+`blackfury-relay/`, avec `blackfury-relay.php` directement dedans.
 Ne pas utiliser le ZIP automatique « Source code » de GitHub comme extension.
 
 Minimum déclaré : WordPress 5.8 et PHP 7.4. Les versions effectivement testées,
 et les limites de ces tests, sont dans [VALIDATION.md](docs/VALIDATION.md).
-`Update URI: false` désactive les mises à jour WordPress.org de ce fork sous
-WordPress 5.8 ou supérieur. Aucun système de mise à jour GitHub automatique n'est ajouté.
+Le canal de mise à jour natif de WordPress propose les nouvelles versions stables
+publiées sur GitHub Releases. L'installation automatique suit le réglage WordPress
+de l'extension. L'installateur vérifie l'empreinte du ZIP et son identité.
+
+**Rappel pour la 2.5.** Retirer l'importeur WP Discord Post avant de publier la
+2.5.0. Le script de construction refusera de fabriquer ce ZIP tant que le module
+de migration existe. Les données déjà importées doivent rester utilisables.
 
 ## Développer et vérifier
 

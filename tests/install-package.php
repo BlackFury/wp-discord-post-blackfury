@@ -2,14 +2,14 @@
 // Run after extracting the built ZIP into the disposable WordPress plugins folder.
 require __DIR__ . '/bootstrap.php';
 try {
-    $plugin = 'wp-discord-post/wp-discord-post.php';
+    $plugin = 'blackfury-relay/blackfury-relay.php';
     expect_true( is_file( WP_PLUGIN_DIR . '/' . $plugin ), 'Extract the built ZIP into the disposable plugins directory first.' );
     $metadata = get_plugin_data( WP_PLUGIN_DIR . '/' . $plugin, false, false );
-    $source = get_plugin_data( dirname( __DIR__ ) . '/wp-discord-post.php', false, false );
+    $source = get_plugin_data( dirname( __DIR__ ) . '/blackfury-relay.php', false, false );
     expect_true( $source['Version'] === $metadata['Version'] && 'BlackFury Relay' === $metadata['Name'], 'Wrong installed version or identity.' );
-    expect_true( 'false' === $metadata['UpdateURI'], 'WordPress.org update exclusion missing.' );
+    expect_true( 'https://github.com/BlackFury/wp-discord-post-blackfury' === $metadata['UpdateURI'], 'Wrong update identity.' );
     $id = wp_insert_post( array( 'post_title' => 'Synthetic pre-existing marker', 'post_status' => 'draft' ) );
-    add_post_meta( $id, '_wp_discord_post_published', 'yes' );
+    add_post_meta( $id, '_blackfury_relay_published', 'yes' );
     $capture = function () {
         ob_start();
         require dirname( __DIR__ ) . '/scripts/settings-fingerprint.php';

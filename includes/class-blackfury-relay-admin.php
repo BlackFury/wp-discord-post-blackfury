@@ -4,14 +4,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /** WordPress settings, per-article controls, and delivery journal. */
-class BlackFury_Relay_Admin {
+class BlackFury_Relay_Dashboard {
 	const PAGE = 'blackfury-relay';
 	const ACTION = 'blackfury_relay_manage';
 
 	private $relay;
 	private $posts;
 
-	public function __construct( BlackFury_Relay $relay, WP_Discord_Post_Post $posts ) {
+	public function __construct( BlackFury_Relay_Delivery $relay, BlackFury_Relay_Plugin_Post $posts ) {
 		$this->relay = $relay;
 		$this->posts = $posts;
 		add_action( 'admin_menu', array( $this, 'menu' ) );
@@ -31,7 +31,7 @@ class BlackFury_Relay_Admin {
 		if ( 'toplevel_page_' . self::PAGE !== $hook && ( ! $screen || 'post' !== $screen->base || 'post' !== $screen->post_type ) ) {
 			return;
 		}
-		wp_enqueue_style( 'blackfury-relay', plugins_url( 'assets/relay.css', dirname( __DIR__ ) . '/wp-discord-post.php' ), array(), '2.2.0-beta.1' );
+		wp_enqueue_style( 'blackfury-relay', plugins_url( 'assets/relay.css', BLACKFURY_RELAY_FILE ), array(), '2.2.0-beta.2' );
 	}
 
 	public function editor() {
@@ -39,7 +39,7 @@ class BlackFury_Relay_Admin {
 		if ( $screen && $screen->is_block_editor() ) {
 			return;
 		}
-		add_meta_box( 'blackfury-relay-article', __( 'BlackFury Relay · Discord', 'wp-discord-post' ), array( $this, 'article' ), 'post', 'normal' );
+		add_meta_box( 'blackfury-relay-article', __( 'BlackFury Relay · Discord', 'blackfury-relay' ), array( $this, 'article' ), 'post', 'normal' );
 	}
 
 	public function block_editor() {
@@ -48,13 +48,13 @@ class BlackFury_Relay_Admin {
 			return;
 		}
 		$channels = array();
-		foreach ( BlackFury_Relay::channels() as $id => $channel ) {
+		foreach ( BlackFury_Relay_Delivery::channels() as $id => $channel ) {
 			$channels[] = array( 'value' => $id, 'label' => $channel['label'], 'color' => $channel['color'] );
 		}
 		$route = $this->relay->destination( $post, 'auto' );
-		$card = $this->posts->preview( $post, ! wp_discord_post_is_embed_enabled() );
+		$card = $this->posts->preview( $post, ! blackfury_relay_post_is_embed_enabled() );
 		$settings = array(
-			'meta' => BlackFury_Relay::OVERRIDE,
+			'meta' => BlackFury_Relay_Delivery::OVERRIDE,
 			'channels' => $channels,
 			'route' => array( 'label' => $route['label'], 'color' => $route['color'] ?? '' ),
 			'card' => array(
@@ -66,27 +66,27 @@ class BlackFury_Relay_Admin {
 				) : false,
 			),
 		);
-		$url = plugins_url( 'assets/relay-editor.js', dirname( __DIR__ ) . '/wp-discord-post.php' );
-		wp_enqueue_script( 'blackfury-relay-editor', $url, array( 'wp-plugins', 'wp-data', 'wp-element', 'wp-components', 'wp-editor', 'wp-edit-post', 'wp-i18n' ), '2.2.0-beta.1', true );
+		$url = plugins_url( 'assets/relay-editor.js', BLACKFURY_RELAY_FILE );
+		wp_enqueue_script( 'blackfury-relay-editor', $url, array( 'wp-plugins', 'wp-data', 'wp-element', 'wp-components', 'wp-editor', 'wp-edit-post', 'wp-i18n' ), '2.2.0-beta.2', true );
 		wp_add_inline_script( 'blackfury-relay-editor', 'window.blackfuryRelayEditor = ' . wp_json_encode( $settings, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ) . ';', 'before' );
 	}
 
 	public function article( WP_Post $post ) {
-		$current = get_post_meta( $post->ID, BlackFury_Relay::OVERRIDE, true ) ?: 'auto';
+		$current = get_post_meta( $post->ID, BlackFury_Relay_Delivery::OVERRIDE, true ) ?: 'auto';
 		$route = $this->relay->destination( $post );
-		$card = $this->posts->preview( $post, ! wp_discord_post_is_embed_enabled() );
-		$job = get_post_meta( $post->ID, BlackFury_Relay::JOB, true );
+		$card = $this->posts->preview( $post, ! blackfury_relay_post_is_embed_enabled() );
+		$job = get_post_meta( $post->ID, BlackFury_Relay_Delivery::JOB, true );
 		wp_nonce_field( 'blackfury_relay_article_' . $post->ID, 'blackfury_relay_article_nonce' );
 		?>
 		<div class="bfr-editor">
-			<p><label for="bfr-article-destination"><strong><?php esc_html_e( 'Destination', 'wp-discord-post' ); ?></strong></label><br>
+			<p><label for="bfr-article-destination"><strong><?php esc_html_e( 'Destination', 'blackfury-relay' ); ?></strong></label><br>
 				<select id="bfr-article-destination" name="blackfury_relay_override">
-					<option value="auto" <?php selected( $current, 'auto' ); ?>><?php esc_html_e( 'Follow category and default rules', 'wp-discord-post' ); ?></option>
-					<option value="off" <?php selected( $current, 'off' ); ?>><?php esc_html_e( 'Do not notify Discord', 'wp-discord-post' ); ?></option>
-					<?php $this->channel_choices( $current, BlackFury_Relay::channels() ); ?>
+					<option value="auto" <?php selected( $current, 'auto' ); ?>><?php esc_html_e( 'Follow category and default rules', 'blackfury-relay' ); ?></option>
+					<option value="off" <?php selected( $current, 'off' ); ?>><?php esc_html_e( 'Do not notify Discord', 'blackfury-relay' ); ?></option>
+					<?php $this->channel_choices( $current, BlackFury_Relay_Delivery::channels() ); ?>
 				</select>
 			</p>
-			<p class="description"><?php esc_html_e( 'Preview uses the saved article. Save your draft to refresh the card and destination.', 'wp-discord-post' ); ?></p>
+			<p class="description"><?php esc_html_e( 'Preview uses the saved article. Save your draft to refresh the card and destination.', 'blackfury-relay' ); ?></p>
 			<?php if ( 'off' !== $route['id'] ) : ?>
 			<div class="bfr-preview">
 				<span class="bfr-eyebrow"><?php echo esc_html( $route['label'] ); ?></span>
@@ -115,23 +115,23 @@ class BlackFury_Relay_Admin {
 			return;
 		}
 		$selection = sanitize_key( self::input( 'blackfury_relay_override' ) );
-		if ( in_array( $selection, array( 'auto', 'off' ), true ) || isset( BlackFury_Relay::channels()[ $selection ] ) ) {
-			update_post_meta( $id, BlackFury_Relay::OVERRIDE, $selection );
+		if ( in_array( $selection, array( 'auto', 'off' ), true ) || isset( BlackFury_Relay_Delivery::channels()[ $selection ] ) ) {
+			update_post_meta( $id, BlackFury_Relay_Delivery::OVERRIDE, $selection );
 		}
 	}
 
 	public function manage() {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You cannot manage BlackFury Relay.', 'wp-discord-post' ), '', array( 'response' => 403 ) );
+			wp_die( esc_html__( 'You cannot manage BlackFury Relay.', 'blackfury-relay' ), '', array( 'response' => 403 ) );
 		}
 		if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) {
-			wp_die( esc_html__( 'This action requires POST.', 'wp-discord-post' ), '', array( 'response' => 405 ) );
+			wp_die( esc_html__( 'This action requires POST.', 'blackfury-relay' ), '', array( 'response' => 405 ) );
 		}
 		if ( ! wp_verify_nonce( self::input( '_wpnonce' ), self::ACTION ) ) {
-			wp_die( esc_html__( 'Reload BlackFury Relay and try again.', 'wp-discord-post' ), '', array( 'response' => 403 ) );
+			wp_die( esc_html__( 'Reload BlackFury Relay and try again.', 'blackfury-relay' ), '', array( 'response' => 403 ) );
 		}
 		$operation = sanitize_key( self::input( 'operation' ) );
-		$channels = BlackFury_Relay::channels();
+		$channels = BlackFury_Relay_Delivery::channels();
 		$id = sanitize_key( self::input( 'channel' ) );
 		$notice = 'invalid';
 		switch ( $operation ) {
@@ -140,14 +140,14 @@ class BlackFury_Relay_Admin {
 				$url = esc_url_raw( trim( self::input( 'url' ) ), array( 'https' ) );
 				$guild = trim( self::input( 'guild' ) );
 				$color = sanitize_hex_color( self::input( 'color' ) ) ?: '#5865f2';
-				if ( $label && BlackFury_Relay::is_webhook( $url ) && ( ! $guild || BlackFury_Relay::is_id( $guild ) ) && count( $channels ) < 50 ) {
+				if ( $label && BlackFury_Relay_Delivery::is_webhook( $url ) && ( ! $guild || BlackFury_Relay_Delivery::is_id( $guild ) ) && count( $channels ) < 50 ) {
 					$channels[ wp_generate_uuid4() ] = compact( 'label', 'url', 'guild', 'color' );
-					$notice = update_option( BlackFury_Relay::CHANNELS, $channels, false ) ? 'saved' : 'invalid';
+					$notice = update_option( BlackFury_Relay_Delivery::CHANNELS, $channels, false ) ? 'saved' : 'invalid';
 				}
 				break;
 			case 'default':
 				if ( '' === $id || isset( $channels[ $id ] ) ) {
-					update_option( BlackFury_Relay::DEFAULT_CHANNEL, $id, false );
+					update_option( BlackFury_Relay_Delivery::DEFAULT_CHANNEL, $id, false );
 					$notice = 'saved';
 				}
 				break;
@@ -155,9 +155,9 @@ class BlackFury_Relay_Admin {
 				$term = absint( self::input( 'term' ) );
 				if ( term_exists( $term, 'category' ) && ( '' === $id || isset( $channels[ $id ] ) ) ) {
 					if ( '' === $id ) {
-						delete_term_meta( $term, BlackFury_Relay::RULE );
+						delete_term_meta( $term, BlackFury_Relay_Delivery::RULE );
 					} else {
-						update_term_meta( $term, BlackFury_Relay::RULE, $id );
+						update_term_meta( $term, BlackFury_Relay_Delivery::RULE, $id );
 					}
 					$notice = 'saved';
 				}
@@ -166,19 +166,19 @@ class BlackFury_Relay_Admin {
 				if ( isset( $channels[ $id ] ) ) {
 					unset( $channels[ $id ] );
 					// Remember affected rules and overrides as unavailable rather than redirecting their messages.
-					$notice = update_option( BlackFury_Relay::CHANNELS, $channels, false ) ? 'saved' : 'invalid';
+					$notice = update_option( BlackFury_Relay_Delivery::CHANNELS, $channels, false ) ? 'saved' : 'invalid';
 				}
 				break;
 			case 'test':
 				$url = $channels[ $id ]['url'] ?? '';
 				if ( 'legacy' === $id ) {
-					$url = ( new WP_Discord_Post_HTTP( 'post' ) )->get_webhook_url();
+					$url = ( new BlackFury_Relay_Plugin_HTTP( 'post' ) )->get_webhook_url();
 				}
 				if ( $url ) {
-					$response = ( new WP_Discord_Post_HTTP( 'post' ) )->relay( $url, __( 'BlackFury Relay connection test', 'wp-discord-post' ) );
+					$response = ( new BlackFury_Relay_Plugin_HTTP( 'post' ) )->relay( $url, __( 'BlackFury Relay connection test', 'blackfury-relay' ) );
 					$data = json_decode( wp_remote_retrieve_body( $response ), true );
 					$code = (int) wp_remote_retrieve_response_code( $response );
-					$notice = ( $code >= 200 && $code < 300 && BlackFury_Relay::is_id( $data['id'] ?? '' ) ) ? 'test_ok' : 'test_unconfirmed';
+					$notice = ( $code >= 200 && $code < 300 && BlackFury_Relay_Delivery::is_id( $data['id'] ?? '' ) ) ? 'test_ok' : 'test_unconfirmed';
 				}
 				break;
 			case 'retry':
@@ -203,7 +203,7 @@ class BlackFury_Relay_Admin {
 
 	private function channel_choices( $selected, array $channels ) {
 		if ( $selected && ! isset( $channels[ $selected ] ) && ! in_array( $selected, array( 'auto', 'off' ), true ) ) {
-			printf( '<option value="%s" selected>%s</option>', esc_attr( $selected ), esc_html__( 'Unavailable channel', 'wp-discord-post' ) );
+			printf( '<option value="%s" selected>%s</option>', esc_attr( $selected ), esc_html__( 'Unavailable channel', 'blackfury-relay' ) );
 		}
 		foreach ( $channels as $key => $channel ) {
 			printf( '<option value="%s"%s>%s</option>', esc_attr( $key ), selected( $selected, $key, false ), esc_html( $channel['label'] ) );
@@ -214,42 +214,45 @@ class BlackFury_Relay_Admin {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
-		$channels = BlackFury_Relay::channels();
-		$default = get_option( BlackFury_Relay::DEFAULT_CHANNEL, '' );
+		$channels = BlackFury_Relay_Delivery::channels();
+		$default = get_option( BlackFury_Relay_Delivery::DEFAULT_CHANNEL, '' );
 		$categories = get_terms( array( 'taxonomy' => 'category', 'hide_empty' => false ) );
 		$notice = isset( $_GET['bfr_notice'] ) && is_string( $_GET['bfr_notice'] ) ? sanitize_key( wp_unslash( $_GET['bfr_notice'] ) ) : '';
 		$messages = array(
-			'saved' => __( 'Settings saved.', 'wp-discord-post' ),
-			'queued' => __( 'Notification queued again.', 'wp-discord-post' ),
-			'test_ok' => __( 'Discord accepted the test message. Check the target channel.', 'wp-discord-post' ),
-			'test_unconfirmed' => __( 'Discord did not confirm the test. Check the channel and webhook before trying again.', 'wp-discord-post' ),
-			'invalid' => __( 'The action could not be completed. Check the fields or refresh the page.', 'wp-discord-post' ),
+			'saved' => __( 'Settings saved.', 'blackfury-relay' ),
+			'queued' => __( 'Notification queued again.', 'blackfury-relay' ),
+			'test_ok' => __( 'Discord accepted the test message. Check the target channel.', 'blackfury-relay' ),
+			'test_unconfirmed' => __( 'Discord did not confirm the test. Check the channel and webhook before trying again.', 'blackfury-relay' ),
+			'invalid' => __( 'The action could not be completed. Check the fields or refresh the page.', 'blackfury-relay' ),
 		);
 		?>
 		<div class="wrap bfr-wrap">
-			<header class="bfr-hero"><p class="bfr-eyebrow">WORDPRESS → DISCORD</p><h1>BlackFury Relay</h1><p><?php esc_html_e( 'Choose where your articles go and track each delivery.', 'wp-discord-post' ); ?></p></header>
+			<header class="bfr-hero"><p class="bfr-eyebrow">WORDPRESS → DISCORD</p><h1>BlackFury Relay</h1><p><?php esc_html_e( 'Choose where your articles go and track each delivery.', 'blackfury-relay' ); ?></p></header>
+			<?php if ( BlackFury_Relay_Plugin::delivery_paused() ) : ?>
+				<div class="notice notice-warning"><p><?php esc_html_e( 'Relay delivery is paused. Open Migration to finish switching from WP Discord Post.', 'blackfury-relay' ); ?></p></div>
+			<?php endif; ?>
 			<?php if ( isset( $messages[ $notice ] ) ) : ?>
 				<div class="notice <?php echo esc_attr( in_array( $notice, array( 'invalid', 'test_unconfirmed' ), true ) ? 'notice-warning' : 'notice-success' ); ?>"><p><?php echo esc_html( $messages[ $notice ] ); ?></p></div>
 			<?php endif; ?>
 			<div class="bfr-grid">
 				<section class="bfr-panel">
-					<h2><?php esc_html_e( 'Connect a channel', 'wp-discord-post' ); ?></h2>
-					<p><?php esc_html_e( 'In Discord, create a webhook in the target channel, copy its URL, then save it here and send a test.', 'wp-discord-post' ); ?></p>
+					<h2><?php esc_html_e( 'Connect a channel', 'blackfury-relay' ); ?></h2>
+					<p><?php esc_html_e( 'In Discord, create a webhook in the target channel, copy its URL, then save it here and send a test.', 'blackfury-relay' ); ?></p>
 					<?php $this->start_form( 'add', 'bfr-stack' ); ?>
-					<label><?php esc_html_e( 'Channel label', 'wp-discord-post' ); ?><input name="label" type="text" required maxlength="80" placeholder="#gaming"></label>
-					<label><?php esc_html_e( 'Discord webhook URL', 'wp-discord-post' ); ?><input name="url" type="password" autocomplete="off" required></label>
-					<label><?php esc_html_e( 'Discord server ID (optional, enables message links)', 'wp-discord-post' ); ?><input name="guild" type="text" inputmode="numeric" pattern="[0-9]{17,20}"></label>
-					<label><?php esc_html_e( 'Embed accent', 'wp-discord-post' ); ?> <input name="color" type="color" value="#5865f2"></label>
-					<?php submit_button( __( 'Save channel', 'wp-discord-post' ), 'primary', 'submit', false ); ?>
+					<label><?php esc_html_e( 'Channel label', 'blackfury-relay' ); ?><input name="label" type="text" required maxlength="80" placeholder="#gaming"></label>
+					<label><?php esc_html_e( 'Discord webhook URL', 'blackfury-relay' ); ?><input name="url" type="password" autocomplete="off" required></label>
+					<label><?php esc_html_e( 'Discord server ID (optional, enables message links)', 'blackfury-relay' ); ?><input name="guild" type="text" inputmode="numeric" pattern="[0-9]{17,20}"></label>
+					<label><?php esc_html_e( 'Embed accent', 'blackfury-relay' ); ?> <input name="color" type="color" value="#5865f2"></label>
+					<?php submit_button( __( 'Save channel', 'blackfury-relay' ), 'primary', 'submit', false ); ?>
 					</form>
 					<ul class="bfr-channels">
-						<?php foreach ( array( 'legacy' => array( 'label' => __( 'Existing webhook', 'wp-discord-post' ) ) ) + $channels as $id => $channel ) : ?>
+						<?php foreach ( array( 'legacy' => array( 'label' => __( 'Existing webhook', 'blackfury-relay' ) ) ) + $channels as $id => $channel ) : ?>
 							<li><strong><?php echo esc_html( $channel['label'] ); ?></strong>
-							<?php $this->start_form( 'test' ); ?><input type="hidden" name="channel" value="<?php echo esc_attr( $id ); ?>"><?php submit_button( __( 'Send test', 'wp-discord-post' ), 'secondary small', 'submit', false ); ?></form>
+							<?php $this->start_form( 'test' ); ?><input type="hidden" name="channel" value="<?php echo esc_attr( $id ); ?>"><?php submit_button( __( 'Send test', 'blackfury-relay' ), 'secondary small', 'submit', false ); ?></form>
 							<?php if ( 'legacy' !== $id ) : ?>
-								<details><summary><?php esc_html_e( 'Remove…', 'wp-discord-post' ); ?></summary>
-								<p><?php esc_html_e( 'Rules pointing here will stop delivering until reassigned.', 'wp-discord-post' ); ?></p>
-								<?php $this->start_form( 'delete' ); ?><input type="hidden" name="channel" value="<?php echo esc_attr( $id ); ?>"><?php submit_button( __( 'Remove channel', 'wp-discord-post' ), 'secondary small', 'submit', false ); ?></form>
+								<details><summary><?php esc_html_e( 'Remove…', 'blackfury-relay' ); ?></summary>
+								<p><?php esc_html_e( 'Rules pointing here will stop delivering until reassigned.', 'blackfury-relay' ); ?></p>
+								<?php $this->start_form( 'delete' ); ?><input type="hidden" name="channel" value="<?php echo esc_attr( $id ); ?>"><?php submit_button( __( 'Remove channel', 'blackfury-relay' ), 'secondary small', 'submit', false ); ?></form>
 								</details>
 							<?php endif; ?>
 							</li>
@@ -257,18 +260,18 @@ class BlackFury_Relay_Admin {
 					</ul>
 				</section>
 				<section class="bfr-panel">
-					<h2><?php esc_html_e( 'Article routing', 'wp-discord-post' ); ?></h2>
-					<p><?php esc_html_e( 'An article override wins, then the matching category with the lowest ID, then the default channel.', 'wp-discord-post' ); ?></p>
+					<h2><?php esc_html_e( 'Article routing', 'blackfury-relay' ); ?></h2>
+					<p><?php esc_html_e( 'An article override wins, then the matching category with the lowest ID, then the default channel.', 'blackfury-relay' ); ?></p>
 					<?php $this->start_form( 'default', 'bfr-line' ); ?>
-					<label><?php esc_html_e( 'Default channel', 'wp-discord-post' ); ?>
-						<select name="channel"><option value=""><?php esc_html_e( 'Existing webhook', 'wp-discord-post' ); ?></option><?php $this->channel_choices( $default, $channels ); ?></select>
-					</label><?php submit_button( __( 'Save', 'wp-discord-post' ), 'secondary', 'submit', false ); ?></form>
+					<label><?php esc_html_e( 'Default channel', 'blackfury-relay' ); ?>
+						<select name="channel"><option value=""><?php esc_html_e( 'Existing webhook', 'blackfury-relay' ); ?></option><?php $this->channel_choices( $default, $channels ); ?></select>
+					</label><?php submit_button( __( 'Save', 'blackfury-relay' ), 'secondary', 'submit', false ); ?></form>
 					<?php foreach ( is_array( $categories ) ? $categories : array() as $term ) : ?>
 						<?php $this->start_form( 'rule', 'bfr-line' ); ?>
 						<input type="hidden" name="term" value="<?php echo esc_attr( $term->term_id ); ?>">
 						<label><?php echo esc_html( $term->name ); ?>
-							<select name="channel"><option value=""><?php esc_html_e( 'No category rule', 'wp-discord-post' ); ?></option><?php $this->channel_choices( get_term_meta( $term->term_id, BlackFury_Relay::RULE, true ), $channels ); ?></select>
-						</label><?php submit_button( __( 'Save', 'wp-discord-post' ), 'secondary', 'submit', false ); ?></form>
+							<select name="channel"><option value=""><?php esc_html_e( 'No category rule', 'blackfury-relay' ); ?></option><?php $this->channel_choices( get_term_meta( $term->term_id, BlackFury_Relay_Delivery::RULE, true ), $channels ); ?></select>
+						</label><?php submit_button( __( 'Save', 'blackfury-relay' ), 'secondary', 'submit', false ); ?></form>
 					<?php endforeach; ?>
 				</section>
 			</div>
@@ -282,24 +285,24 @@ class BlackFury_Relay_Admin {
 			'post_type' => 'post',
 			'post_status' => array( 'publish', 'private', 'draft', 'future', 'pending', 'trash' ),
 			'numberposts' => 50,
-			'meta_key' => BlackFury_Relay::JOB,
+			'meta_key' => BlackFury_Relay_Delivery::JOB,
 			'orderby' => 'modified',
 		) );
 		?>
 		<section class="bfr-panel bfr-journal">
-			<h2><?php esc_html_e( 'Delivery journal', 'wp-discord-post' ); ?></h2>
-			<p><?php esc_html_e( 'Last 50 tracked articles. Pending deliveries use WordPress scheduled tasks.', 'wp-discord-post' ); ?></p>
-			<?php if ( ! $posts ) : ?><p><?php esc_html_e( 'No tracked articles yet.', 'wp-discord-post' ); ?></p><?php else : ?>
+			<h2><?php esc_html_e( 'Delivery journal', 'blackfury-relay' ); ?></h2>
+			<p><?php esc_html_e( 'Last 50 tracked articles. Pending deliveries use WordPress scheduled tasks.', 'blackfury-relay' ); ?></p>
+			<?php if ( ! $posts ) : ?><p><?php esc_html_e( 'No tracked articles yet.', 'blackfury-relay' ); ?></p><?php else : ?>
 			<table class="widefat striped"><thead><tr>
-				<th><?php esc_html_e( 'Article', 'wp-discord-post' ); ?></th><th><?php esc_html_e( 'Destination', 'wp-discord-post' ); ?></th>
-				<th><?php esc_html_e( 'Status', 'wp-discord-post' ); ?></th><th><?php esc_html_e( 'Last activity', 'wp-discord-post' ); ?></th>
+				<th><?php esc_html_e( 'Article', 'blackfury-relay' ); ?></th><th><?php esc_html_e( 'Destination', 'blackfury-relay' ); ?></th>
+				<th><?php esc_html_e( 'Status', 'blackfury-relay' ); ?></th><th><?php esc_html_e( 'Last activity', 'blackfury-relay' ); ?></th>
 			</tr></thead><tbody>
 			<?php foreach ( $posts as $post ) :
-				$job = get_post_meta( $post->ID, BlackFury_Relay::JOB, true );
+				$job = get_post_meta( $post->ID, BlackFury_Relay_Delivery::JOB, true );
 				$status = $job['status'];
 				?>
 				<tr>
-					<td><a href="<?php echo esc_url( get_edit_post_link( $post ) ); ?>"><?php echo esc_html( get_the_title( $post ) ?: __( '(no title)', 'wp-discord-post' ) ); ?></a></td>
+					<td><a href="<?php echo esc_url( get_edit_post_link( $post ) ); ?>"><?php echo esc_html( get_the_title( $post ) ?: __( '(no title)', 'blackfury-relay' ) ); ?></a></td>
 					<td><?php echo esc_html( $job['label'] ?? '—' ); ?></td>
 					<td><span class="bfr-status bfr-<?php echo esc_attr( $status ); ?>"><?php echo esc_html( $this->status_label( $status ) ); ?></span>
 						<?php if ( ! empty( $job['code'] ) ) : ?> <small>HTTP <?php echo esc_html( $job['code'] ); ?></small><?php endif; ?>
@@ -307,19 +310,19 @@ class BlackFury_Relay_Admin {
 						<?php if ( 'pending' === $status && ! empty( $job['next'] ) ) : ?><p class="description"><?php echo esc_html( wp_date( 'Y-m-d H:i', $job['next'] ) ); ?></p><?php endif; ?>
 						<?php if ( 'accepted' === $status && ! empty( $job['message'] ) ) : ?>
 							<?php if ( ! empty( $job['guild'] ) && ! empty( $job['channel'] ) ) : ?>
-								<a href="<?php echo esc_url( 'https://discord.com/channels/' . $job['guild'] . '/' . $job['channel'] . '/' . $job['message'] ); ?>"><?php esc_html_e( 'Open in Discord', 'wp-discord-post' ); ?></a>
+								<a href="<?php echo esc_url( 'https://discord.com/channels/' . $job['guild'] . '/' . $job['channel'] . '/' . $job['message'] ); ?>"><?php esc_html_e( 'Open in Discord', 'blackfury-relay' ); ?></a>
 							<?php else : ?><small><?php echo esc_html( $job['message'] ); ?></small><?php endif; ?>
 						<?php elseif ( ( $job['retry_not_before'] ?? 0 ) > time() ) : ?>
-							<p class="description"><?php printf( esc_html__( 'Retry available after %s.', 'wp-discord-post' ), esc_html( wp_date( 'Y-m-d H:i', $job['retry_not_before'] ) ) ); ?></p>
-						<?php elseif ( in_array( $status, array( 'pending', 'sending' ), true ) && ! wp_next_scheduled( BlackFury_Relay::EVENT, array( $post->ID ) ) ) : ?>
+							<p class="description"><?php printf( esc_html__( 'Retry available after %s.', 'blackfury-relay' ), esc_html( wp_date( 'Y-m-d H:i', $job['retry_not_before'] ) ) ); ?></p>
+						<?php elseif ( in_array( $status, array( 'pending', 'sending' ), true ) && ! wp_next_scheduled( BlackFury_Relay_Delivery::EVENT, array( $post->ID ) ) ) : ?>
 							<?php $this->start_form( 'retry', 'bfr-retry' ); ?>
 							<input type="hidden" name="post_id" value="<?php echo esc_attr( $post->ID ); ?>">
-							<?php submit_button( __( 'Recover scheduled task', 'wp-discord-post' ), 'secondary small', 'submit', false ); ?></form>
+							<?php submit_button( __( 'Recover scheduled task', 'blackfury-relay' ), 'secondary small', 'submit', false ); ?></form>
 						<?php elseif ( in_array( $status, array( 'failed', 'uncertain' ), true ) ) : ?>
 							<?php $this->start_form( 'retry', 'bfr-retry' ); ?>
 							<input type="hidden" name="post_id" value="<?php echo esc_attr( $post->ID ); ?>">
-							<?php if ( 'uncertain' === $status ) : ?><label><input type="checkbox" name="confirm_uncertain" value="yes" required> <?php esc_html_e( 'I checked the channel. Retrying may duplicate a message.', 'wp-discord-post' ); ?></label><?php endif; ?>
-							<?php submit_button( __( 'Retry with current routing', 'wp-discord-post' ), 'secondary small', 'submit', false ); ?></form>
+							<?php if ( 'uncertain' === $status ) : ?><label><input type="checkbox" name="confirm_uncertain" value="yes" required> <?php esc_html_e( 'I checked the channel. Retrying may duplicate a message.', 'blackfury-relay' ); ?></label><?php endif; ?>
+							<?php submit_button( __( 'Retry with current routing', 'blackfury-relay' ), 'secondary small', 'submit', false ); ?></form>
 						<?php endif; ?>
 					</td>
 					<td><?php echo esc_html( wp_date( 'Y-m-d H:i', (int) $job['updated'] ) ); ?></td>
@@ -332,28 +335,28 @@ class BlackFury_Relay_Admin {
 
 	private function status_label( $status ) {
 		$labels = array(
-			'pending' => __( 'Pending', 'wp-discord-post' ),
-			'sending' => __( 'Sending', 'wp-discord-post' ),
-			'accepted' => __( 'Accepted by Discord', 'wp-discord-post' ),
-			'failed' => __( 'Failed', 'wp-discord-post' ),
-			'uncertain' => __( 'Unconfirmed delivery', 'wp-discord-post' ),
-			'skipped' => __( 'Skipped', 'wp-discord-post' ),
+			'pending' => __( 'Pending', 'blackfury-relay' ),
+			'sending' => __( 'Sending', 'blackfury-relay' ),
+			'accepted' => __( 'Accepted by Discord', 'blackfury-relay' ),
+			'failed' => __( 'Failed', 'blackfury-relay' ),
+			'uncertain' => __( 'Unconfirmed delivery', 'blackfury-relay' ),
+			'skipped' => __( 'Skipped', 'blackfury-relay' ),
 		);
 		return $labels[ $status ] ?? '';
 	}
 
 	private function reason_label( $reason ) {
 		$labels = array(
-			'invalid_destination' => __( 'Configure an HTTPS webhook or update the article routing.', 'wp-discord-post' ),
-			'destination_changed' => __( 'The destination changed while the article was queued.', 'wp-discord-post' ),
-			'rejected' => __( 'Discord rejected the request. Check the HTTP status and webhook.', 'wp-discord-post' ),
-			'rate_limit' => __( 'The Discord rate limit was reached. Retry after it resets.', 'wp-discord-post' ),
-			'scheduler' => __( 'WordPress could not schedule delivery.', 'wp-discord-post' ),
-			'storage' => __( 'WordPress could not save delivery state.', 'wp-discord-post' ),
-			'unconfirmed' => __( 'Check Discord before retrying. The message may already exist.', 'wp-discord-post' ),
-			'interrupted' => __( 'The delivery worker was interrupted. Check the target channel.', 'wp-discord-post' ),
-			'article_opt_out' => __( 'Discord delivery was disabled for this article.', 'wp-discord-post' ),
-			'not_eligible' => __( 'The article is no longer eligible or was previously sent.', 'wp-discord-post' ),
+			'invalid_destination' => __( 'Configure an HTTPS webhook or update the article routing.', 'blackfury-relay' ),
+			'destination_changed' => __( 'The destination changed while the article was queued.', 'blackfury-relay' ),
+			'rejected' => __( 'Discord rejected the request. Check the HTTP status and webhook.', 'blackfury-relay' ),
+			'rate_limit' => __( 'The Discord rate limit was reached. Retry after it resets.', 'blackfury-relay' ),
+			'scheduler' => __( 'WordPress could not schedule delivery.', 'blackfury-relay' ),
+			'storage' => __( 'WordPress could not save delivery state.', 'blackfury-relay' ),
+			'unconfirmed' => __( 'Check Discord before retrying. The message may already exist.', 'blackfury-relay' ),
+			'interrupted' => __( 'The delivery worker was interrupted. Check the target channel.', 'blackfury-relay' ),
+			'article_opt_out' => __( 'Discord delivery was disabled for this article.', 'blackfury-relay' ),
+			'not_eligible' => __( 'The article is no longer eligible or was previously sent.', 'blackfury-relay' ),
 		);
 		return $labels[ $reason ] ?? '';
 	}

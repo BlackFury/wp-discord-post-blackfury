@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Main class of the compatibility with GF.
  */
-class WP_Discord_Post_GF {
+class BlackFury_Relay_Plugin_GF {
 	/**
 	 * Adds the required hooks.
 	 */
@@ -30,7 +30,7 @@ class WP_Discord_Post_GF {
 	public function send( $entry, $form ) {
 		$embed = $this->_prepare_embed( $form, $entry );
 
-		$http = new WP_Discord_Post_HTTP( 'gf' );
+		$http = new BlackFury_Relay_Plugin_HTTP( 'gf' );
 		return $http->process( '', $embed );
 	}
 
@@ -62,4 +62,4 @@ class WP_Discord_Post_GF {
 	}
 }
 
-return new WP_Discord_Post_GF();
+return new BlackFury_Relay_Plugin_GF();

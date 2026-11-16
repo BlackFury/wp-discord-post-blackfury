@@ -6,16 +6,18 @@ if ( ! defined( 'ABSPATH' ) || ! isset( $wpdb ) ) {
     exit( 2 );
 }
 $rows = $wpdb->get_results( $wpdb->prepare(
-    "SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name LIKE %s ORDER BY option_name",
-    $wpdb->esc_like( 'wp_discord_' ) . '%'
+    "SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s ORDER BY option_name",
+    $wpdb->esc_like( 'wp_discord_' ) . '%',
+    $wpdb->esc_like( 'blackfury_relay_' ) . '%'
 ), ARRAY_A );
 $options = array();
 foreach ( $rows as $row ) {
     $options[ $row['option_name'] ] = hash( 'sha256', $row['option_value'] );
 }
 $meta = $wpdb->get_results( $wpdb->prepare(
-    "SELECT post_id, meta_id, meta_value FROM {$wpdb->postmeta} WHERE meta_key = %s ORDER BY post_id, meta_id",
-    '_wp_discord_post_published'
+    "SELECT post_id, meta_id, meta_key, meta_value FROM {$wpdb->postmeta} WHERE meta_key IN (%s, %s) ORDER BY post_id, meta_id",
+    '_wp_discord_post_published',
+    '_blackfury_relay_published'
 ), ARRAY_A );
 echo wp_json_encode( array(
     'format' => 1,

@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Main class of the requests handler for WP Discord Post.
  */
-class WP_Discord_Post_HTTP {
+class BlackFury_Relay_Plugin_HTTP {
 	/**
 	 * The bot username.
 	 *
@@ -91,15 +91,15 @@ class WP_Discord_Post_HTTP {
 		$context = $this->get_context();
 
 		if ( ! empty( $context ) ) {
-			$specific_url = get_option( 'wp_discord_post_' . sanitize_key( $context ) . '_webhook_url' );
+			$specific_url = get_option( 'blackfury_relay_post_' . sanitize_key( $context ) . '_webhook_url' );
 
 			if ( ! empty( $specific_url ) && empty( $url ) ) {
 				$url = $specific_url;
 			}
 		}
 
-		$url = apply_filters( 'wp_discord_post_' . sanitize_key( $context ) . '_webhook_url', $url );
-		$url = apply_filters( 'wp_discord_post_webhook_url', $url );
+		$url = apply_filters( 'blackfury_relay_post_' . sanitize_key( $context ) . '_webhook_url', $url );
+		$url = apply_filters( 'blackfury_relay_post_webhook_url', $url );
 
 		$this->_webhook_url = esc_url_raw( $url );
 	}
@@ -170,10 +170,10 @@ class WP_Discord_Post_HTTP {
 	 */
 	public function __construct( $context = '' ) {
 		$this->set_context( $context );
-		$this->set_username( get_option( 'wp_discord_post_bot_username' ) );
-		$this->set_avatar( get_option( 'wp_discord_post_avatar_url' ) );
-		$this->set_token( get_option( 'wp_discord_post_bot_token' ) );
-		$this->set_webhook_url( get_option( 'wp_discord_post_webhook_url' ) );
+		$this->set_username( get_option( 'blackfury_relay_post_bot_username' ) );
+		$this->set_avatar( get_option( 'blackfury_relay_post_avatar_url' ) );
+		$this->set_token( get_option( 'blackfury_relay_post_bot_token' ) );
+		$this->set_webhook_url( get_option( 'blackfury_relay_post_webhook_url' ) );
 	}
 
 	/**
@@ -185,17 +185,20 @@ class WP_Discord_Post_HTTP {
 	 * @return object;
 	 */
 	public function process( $content = '', $embed = array(), $id = 0 ) {
+		if ( BlackFury_Relay_Plugin::delivery_paused() ) {
+			return new WP_Error( 'blackfury_relay_paused' );
+		}
 		$response = $this->_send_request( $content, $embed );
 
 		$code = (int) wp_remote_retrieve_response_code( $response );
 		if ( $code >= 200 && $code < 300 ) {
-			if ( wp_discord_post_is_logging_enabled() ) {
+			if ( blackfury_relay_post_is_logging_enabled() ) {
 				error_log( 'WP Discord Post - Request sent.' );
 			}
 
 			$this->_set_post_meta( $id );
 		} else {
-			if ( wp_discord_post_is_logging_enabled() ) {
+			if ( blackfury_relay_post_is_logging_enabled() ) {
 				error_log( 'WP Discord Post - Request not confirmed.' );
 			}
 		}
@@ -205,7 +208,10 @@ class WP_Discord_Post_HTTP {
 
 	/** Execute a Discord webhook and ask Discord to return the created message. */
 	public function relay( $url, $content, $embed = array(), $allow_everyone = false, $color = '' ) {
-		if ( ! BlackFury_Relay::is_webhook( $url, true ) ) {
+		if ( BlackFury_Relay_Plugin::delivery_paused() ) {
+			return new WP_Error( 'blackfury_relay_paused' );
+		}
+		if ( ! BlackFury_Relay_Delivery::is_webhook( $url, true ) ) {
 			return new WP_Error( 'relay_invalid_destination' );
 		}
 
@@ -220,12 +226,12 @@ class WP_Discord_Post_HTTP {
 			$payload['avatar_url'] = $this->get_avatar();
 		}
 		if ( $embed ) {
-			$payload['embeds'] = WP_Discord_Post_Formatting::get_embed( $embed );
+			$payload['embeds'] = BlackFury_Relay_Plugin_Formatting::get_embed( $embed );
 			if ( $color ) {
 				$payload['embeds'][0]['color'] = hexdec( substr( $color, 1 ) );
 			}
 		}
-		$payload = apply_filters( 'wp_discord_post_request_body_args', $payload );
+		$payload = apply_filters( 'blackfury_relay_post_request_body_args', $payload );
 		$payload['allowed_mentions'] = array( 'parse' => $allow_everyone ? array( 'everyone' ) : array() );
 		$body = wp_json_encode( $payload );
 		if ( false === $body ) {
@@ -238,9 +244,9 @@ class WP_Discord_Post_HTTP {
 			'timeout'     => 10,
 			'redirection' => 0,
 		);
-		do_action( 'wp_discord_post_before_request', $request, $url );
+		do_action( 'blackfury_relay_post_before_request', $request, $url );
 		$response = wp_safe_remote_post( $url, $request );
-		do_action( 'wp_discord_post_after_request', $response );
+		do_action( 'blackfury_relay_post_after_request', $response );
 		return $response;
 	}
 
@@ -260,12 +266,12 @@ class WP_Discord_Post_HTTP {
 		);
 
 		if ( ! empty( $embed ) ) {
-			$args['embeds'] = WP_Discord_Post_Formatting::get_embed( $embed );
+			$args['embeds'] = BlackFury_Relay_Plugin_Formatting::get_embed( $embed );
 		}
 
-		$args = apply_filters( 'wp_discord_post_request_body_args', $args );
+		$args = apply_filters( 'blackfury_relay_post_request_body_args', $args );
 
-		$request = apply_filters( 'wp_discord_post_request_args', array(
+		$request = apply_filters( 'blackfury_relay_post_request_args', array(
 			'headers' => array(
 				'Authorization' => 'Bot ' . esc_html( $this->get_token() ),
 				'Content-Type'  => 'application/json',
@@ -273,15 +279,15 @@ class WP_Discord_Post_HTTP {
 			'body' => wp_json_encode( $args ),
 		) );
 
-		if ( wp_discord_post_is_logging_enabled() ) {
+		if ( blackfury_relay_post_is_logging_enabled() ) {
 			error_log( 'WP Discord Post - Sending request (private data omitted).' );
 		}
 
-		do_action( 'wp_discord_post_before_request', $request, $this->get_webhook_url() );
+		do_action( 'blackfury_relay_post_before_request', $request, $this->get_webhook_url() );
 
 		$response = wp_remote_post( esc_url( $this->get_webhook_url() ), $request );
 
-		do_action( 'wp_discord_post_after_request', $response );
+		do_action( 'blackfury_relay_post_after_request', $response );
 
 		return $response;
 	}
@@ -297,7 +303,7 @@ class WP_Discord_Post_HTTP {
 		$id = intval( $id );
 
 		if ( 0 !== $id ) {
-			return add_post_meta( $id, '_wp_discord_post_published', 'yes' );
+			return add_post_meta( $id, '_blackfury_relay_published', 'yes' );
 		}
 
 		return false;

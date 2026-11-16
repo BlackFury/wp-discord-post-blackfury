@@ -4,7 +4,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /** Queues and tracks editorial messages. No webhook or message is stored in the journal. */
-class BlackFury_Relay {
+class BlackFury_Relay_Delivery {
 	const EVENT = 'blackfury_relay_deliver';
 	const JOB = '_blackfury_relay_delivery';
 	const OVERRIDE = '_blackfury_relay_override';
@@ -14,13 +14,13 @@ class BlackFury_Relay {
 
 	private $posts;
 
-	public function __construct( WP_Discord_Post_Post $posts ) {
+	public function __construct( BlackFury_Relay_Plugin_Post $posts ) {
 		$this->posts = $posts;
 		add_action( 'wp_after_insert_post', array( $this, 'enqueue' ), 10, 4 );
 		add_action( 'init', array( self::class, 'register_editor_meta' ) );
 		add_action( self::EVENT, array( $this, 'deliver' ) );
 		if ( is_admin() ) {
-			new BlackFury_Relay_Admin( $this, $posts );
+			new BlackFury_Relay_Dashboard( $this, $posts );
 		}
 	}
 
@@ -60,7 +60,7 @@ class BlackFury_Relay {
 		$channels = self::channels();
 		$override = $override ?? get_post_meta( $post->ID, self::OVERRIDE, true );
 		if ( 'off' === $override ) {
-			return array( 'id' => 'off', 'label' => __( 'No Discord notification', 'wp-discord-post' ) );
+			return array( 'id' => 'off', 'label' => __( 'No Discord notification', 'blackfury-relay' ) );
 		}
 		if ( '' !== $override && 'auto' !== $override ) {
 			return $this->named_destination( $override, $channels );
@@ -76,22 +76,22 @@ class BlackFury_Relay {
 		if ( $default ) {
 			return $this->named_destination( $default, $channels );
 		}
-		$legacy = new WP_Discord_Post_HTTP( 'post' );
-		return array( 'id' => 'legacy', 'label' => __( 'Existing webhook', 'wp-discord-post' ), 'url' => $legacy->get_webhook_url() );
+		$legacy = new BlackFury_Relay_Plugin_HTTP( 'post' );
+		return array( 'id' => 'legacy', 'label' => __( 'Existing webhook', 'blackfury-relay' ), 'url' => $legacy->get_webhook_url() );
 	}
 
 	private function named_destination( $id, array $channels ) {
 		if ( ! isset( $channels[ $id ] ) ) {
-			return array( 'id' => $id, 'label' => __( 'Unavailable channel', 'wp-discord-post' ) );
+			return array( 'id' => $id, 'label' => __( 'Unavailable channel', 'blackfury-relay' ) );
 		}
 		return array( 'id' => $id ) + $channels[ $id ];
 	}
 
 	public function enqueue( $id, WP_Post $post, $update, $before ) {
 		// Core calls this after REST meta and terms are saved, including for scheduled articles.
-		if ( 'publish' !== $post->post_status || ( $before && 'publish' === $before->post_status ) || 'post' !== $post->post_type
-			|| get_post_meta( $id, '_wp_discord_post_published', true )
-			|| ! apply_filters( 'wp_discord_post_is_new_post', true, $post ) ) {
+		if ( BlackFury_Relay_Plugin::delivery_paused() || 'publish' !== $post->post_status || ( $before && 'publish' === $before->post_status ) || 'post' !== $post->post_type
+			|| get_post_meta( $id, '_blackfury_relay_published', true )
+			|| ! apply_filters( 'blackfury_relay_post_is_new_post', true, $post ) ) {
 			return;
 		}
 		$this->with_lock( $post->ID, function () use ( $post ) {
@@ -105,7 +105,7 @@ class BlackFury_Relay {
 	public function retry( $id, $accept_uncertainty ) {
 		return $this->with_lock( $id, function () use ( $id, $accept_uncertainty ) {
 			$job = get_post_meta( $id, self::JOB, true );
-			if ( ! $job || get_post_meta( $id, '_wp_discord_post_published', true ) ) {
+			if ( ! $job || get_post_meta( $id, '_blackfury_relay_published', true ) ) {
 				return false;
 			}
 			if ( in_array( $job['status'], array( 'pending', 'sending' ), true ) ) {
@@ -142,9 +142,13 @@ class BlackFury_Relay {
 			if ( 'pending' !== $job['status'] || $job['next'] > time() ) {
 				return;
 			}
+			if ( BlackFury_Relay_Plugin::delivery_paused() ) {
+				$this->schedule( $id, $job, time() + 300 );
+				return;
+			}
 			$post = get_post( $id );
 			if ( ! $post || 'publish' !== $post->post_status || '' !== $post->post_password
-				|| get_post_meta( $id, '_wp_discord_post_published', true ) ) {
+				|| get_post_meta( $id, '_blackfury_relay_published', true ) ) {
 				$this->finish( $id, $job, 'skipped', 'not_eligible' );
 				return;
 			}
@@ -178,9 +182,9 @@ class BlackFury_Relay {
 				$this->finish( $id, $job, 'failed', 'storage' );
 				return;
 			}
-			$card = $this->posts->preview( $post, ! wp_discord_post_is_embed_enabled() );
-			$http = new WP_Discord_Post_HTTP( 'post' );
-			$response = $http->relay( $url, $card['content'], $card['embed'], 'yes' === get_option( 'wp_discord_post_mention_everyone' ), $route['color'] ?? '' );
+			$card = $this->posts->preview( $post, ! blackfury_relay_post_is_embed_enabled() );
+			$http = new BlackFury_Relay_Plugin_HTTP( 'post' );
+			$response = $http->relay( $url, $card['content'], $card['embed'], 'yes' === get_option( 'blackfury_relay_post_mention_everyone' ), $route['color'] ?? '' );
 			$code = (int) wp_remote_retrieve_response_code( $response );
 			$data = json_decode( wp_remote_retrieve_body( $response ), true );
 			$message = $data['id'] ?? '';
@@ -191,7 +195,7 @@ class BlackFury_Relay {
 				$job['channel'] = self::is_id( $channel ) ? $channel : '';
 				$guild = $data['guild_id'] ?? ( $route['guild'] ?? '' );
 				$job['guild'] = self::is_id( $guild ) ? $guild : '';
-				update_post_meta( $id, '_wp_discord_post_published', 'yes' );
+				update_post_meta( $id, '_blackfury_relay_published', 'yes' );
 				$this->finish( $id, $job, 'accepted' );
 			} elseif ( 429 === $code ) {
 				$header = wp_remote_retrieve_header( $response, 'retry-after' );

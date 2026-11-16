@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Main class of the compatibility with CF7.
  */
-class WP_Discord_Post_CF7 {
+class BlackFury_Relay_Plugin_CF7 {
 	/**
 	 * Adds the required hooks.
 	 */
@@ -29,7 +29,7 @@ class WP_Discord_Post_CF7 {
 	public function send( $contact_form, $abort, $submission ) {
 		$embed = $this->_prepare_embed( $submission );
 
-		$http = new WP_Discord_Post_HTTP( 'cf7' );
+		$http = new BlackFury_Relay_Plugin_HTTP( 'cf7' );
 		return $http->process( '', $embed );
 	}
 
@@ -61,4 +61,4 @@ class WP_Discord_Post_CF7 {
 	}
 }
 
-return new WP_Discord_Post_CF7();
+return new BlackFury_Relay_Plugin_CF7();

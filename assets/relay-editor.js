@@ -4,8 +4,8 @@
     const __ = wp.i18n.__;
     if (!Panel || !settings) return;
     const choices = [
-        {value: 'auto', label: __('Follow category and default rules', 'wp-discord-post')},
-        {value: 'off', label: __('Do not notify Discord', 'wp-discord-post')},
+        {value: 'auto', label: __('Follow category and default rules', 'blackfury-relay')},
+        {value: 'off', label: __('Do not notify Discord', 'blackfury-relay')},
         ...settings.channels
     ];
 
@@ -22,17 +22,17 @@
         const value = state.meta[settings.meta] || 'auto';
         const selected = choices.find(function (channel) { return channel.value === value; });
         const route = value === 'auto' ? settings.route : selected || {};
-        const options = selected ? choices : [...choices, {value, label: __('Unavailable channel', 'wp-discord-post')}];
+        const options = selected ? choices : [...choices, {value, label: __('Unavailable channel', 'blackfury-relay')}];
         const card = settings.card.embed;
         return h(Panel, {name: 'blackfury-relay', title: 'BlackFury Relay'},
             h(wp.components.SelectControl, {
-                label: __('Destination', 'wp-discord-post'),
+                label: __('Destination', 'blackfury-relay'),
                 value,
                 options,
                 onChange: function (next) { editPost({meta: {[settings.meta]: next}}); }
             }),
             value !== 'off' && h('div', {className: 'bfr-preview'},
-                h('span', {className: 'bfr-eyebrow'}, route.label || __('Unavailable channel', 'wp-discord-post')),
+                h('span', {className: 'bfr-eyebrow'}, route.label || __('Unavailable channel', 'blackfury-relay')),
                 h('p', null, settings.card.content),
                 card && h('div', {className: 'bfr-embed', style: {'--bfr-accent': route.color || '#5865f2'}},
                     h('strong', null, typeof state.title === 'string' ? state.title || card.title : card.title),
@@ -40,7 +40,7 @@
                     card.image && h('img', {src: card.image, alt: ''})
                 )
             ),
-            h('p', {className: 'description'}, __('Save your draft and reload to refresh the message, image and category routing.', 'wp-discord-post'))
+            h('p', {className: 'description'}, __('Save your draft and reload to refresh the message, image and category routing.', 'blackfury-relay'))
         );
     }
     wp.plugins.registerPlugin('blackfury-relay', {render: RelayPanel});

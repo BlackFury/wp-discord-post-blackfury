@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.2.0-beta.2 — Distribution indépendante
+
+- Identité, réglages et marqueurs propres à BlackFury Relay.
+- Import des réglages historiques et des anciens marqueurs, sans supprimer la source ni écraser une configuration Relay. Retrait prévu pour la 2.5 avec garde-fou de construction.
+- Canal stable GitHub Releases dans WordPress, avec vérification du ZIP et respect du choix de mise à jour automatique.
+
 ## 2.2.0-beta.1 — BlackFury Relay
 
 - Nouveau parcours d'administration pour connecter et tester des salons.

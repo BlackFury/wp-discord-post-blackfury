@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Main class of the compatibility with CF7.
  */
-class WP_Discord_Post_Jetpack_CF {
+class BlackFury_Relay_Plugin_Jetpack_CF {
 	/**
 	 * Adds the required hooks.
 	 */
@@ -31,7 +31,7 @@ class WP_Discord_Post_Jetpack_CF {
 	public function send( $post_id, $all_values ) {
 		$embed = $this->_prepare_embed( $all_values );
 
-		$http = new WP_Discord_Post_HTTP( 'jetpack' );
+		$http = new BlackFury_Relay_Plugin_HTTP( 'jetpack' );
 		return $http->process( '', $embed );
 	}
 
@@ -63,4 +63,4 @@ class WP_Discord_Post_Jetpack_CF {
 	}
 }
 
-return new WP_Discord_Post_Jetpack_CF();
+return new BlackFury_Relay_Plugin_Jetpack_CF();

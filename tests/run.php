@@ -1,6 +1,7 @@
 <?php
 $cases = array( 'render', 'legacy-get', 'get', 'missing-nonce', 'bad-nonce', 'array-nonce', 'wrong-action-nonce', 'expired-nonce', 'subscriber', 'anonymous', 'query-only-nonce', 'valid-post', 'settings', 'publish-once', 'log-redaction', 'routing', 'settings-save', 'fingerprint' );
 $cases = array_merge( $cases, array( 'relay-http-failure', 'relay-delivery', 'relay-rate-limit', 'relay-uncertain', 'relay-route', 'relay-skip', 'relay-preview', 'relay-admin', 'relay-override', 'relay-private', 'relay-rest', 'relay-lock' ) );
+$cases = array_merge( $cases, array( 'independent-migrate', 'independent-batch', 'independent-overlap', 'independent-update' ) );
 $failed = 0;
 foreach ( $cases as $case ) {
     $command = escapeshellarg( PHP_BINARY ) . ' -c ' . escapeshellarg( php_ini_loaded_file() ?: '' ) . ' ' . escapeshellarg( __DIR__ . '/case.php' ) . ' ' . escapeshellarg( $case );

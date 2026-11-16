@@ -1,6 +1,6 @@
 <?php
 load_subject();
-$relay = WP_Discord_Post::instance()->post;
+$relay = BlackFury_Relay_Plugin::instance()->post;
 $status = 200;
 $response = function () use ( &$status ) {
     return is_int( $status ) ? array(
@@ -14,14 +14,14 @@ $id = wp_insert_post( array( 'post_title' => 'Relay fixture', 'post_excerpt' => 
 expect_true( is_int( $id ) && $id > 0, 'Fixture post creation failed.' );
 if ( 'relay-http-failure' === $case ) {
     $status = 401;
-    ( new WP_Discord_Post_HTTP( 'post' ) )->process( 'Fixture', array(), $id );
-    expect_true( ! get_post_meta( $id, '_wp_discord_post_published', true ), 'HTTP 401 was recorded as a success.' );
+    ( new BlackFury_Relay_Plugin_HTTP( 'post' ) )->process( 'Fixture', array(), $id );
+    expect_true( ! get_post_meta( $id, '_blackfury_relay_published', true ), 'HTTP 401 was recorded as a success.' );
     return;
 }
 if ( 'relay-rate-limit' === $case ) { $status = 429; }
 if ( 'relay-uncertain' === $case ) { $status = 'timeout'; }
 if ( 'relay-route' === $case ) {
-    update_option( 'wp_discord_post_disable_embed', 'no' );
+    update_option( 'blackfury_relay_post_disable_embed', 'no' );
     $category = wp_insert_term( 'Relay gaming ' . $id, 'category' );
     wp_set_post_categories( $id, array( $category['term_id'] ) );
     $url = 'https://discord.com/api/webhooks/123456789012345678/' . str_repeat( 'a', 30 );
@@ -31,46 +31,46 @@ if ( 'relay-route' === $case ) {
 if ( 'relay-skip' === $case ) { update_post_meta( $id, '_blackfury_relay_override', 'off' ); }
 if ( 'relay-private' === $case ) { wp_update_post( array( 'ID' => $id, 'post_password' => 'fixture-password' ) ); }
 if ( 'relay-rest' === $case ) {
-    BlackFury_Relay::register_editor_meta();
+    BlackFury_Relay_Delivery::register_editor_meta();
     $route = '/wp/v2/posts/' . $id;
     $request = new WP_REST_Request( 'POST', $route );
-    $request->set_body_params( array( 'status' => 'publish', 'meta' => array( BlackFury_Relay::OVERRIDE => 'off' ) ) );
+    $request->set_body_params( array( 'status' => 'publish', 'meta' => array( BlackFury_Relay_Delivery::OVERRIDE => 'off' ) ) );
     $response = rest_do_request( $request );
     expect_true( 200 === $response->get_status(), 'Block editor REST publication failed: ' . wp_json_encode( $response->get_data() ) );
-    expect_true( 'off' === get_post_meta( $id, BlackFury_Relay::OVERRIDE, true ), 'Block editor override was not saved.' );
-    expect_true( wp_next_scheduled( BlackFury_Relay::EVENT, array( $id ) ), 'REST publication was not queued.' );
-    do_action( BlackFury_Relay::EVENT, $id );
-    expect_true( 'skipped' === get_post_meta( $id, BlackFury_Relay::JOB, true )['status'] && ! $GLOBALS['requests'], 'REST publication ignored the opt-out.' );
+    expect_true( 'off' === get_post_meta( $id, BlackFury_Relay_Delivery::OVERRIDE, true ), 'Block editor override was not saved.' );
+    expect_true( wp_next_scheduled( BlackFury_Relay_Delivery::EVENT, array( $id ) ), 'REST publication was not queued.' );
+    do_action( BlackFury_Relay_Delivery::EVENT, $id );
+    expect_true( 'skipped' === get_post_meta( $id, BlackFury_Relay_Delivery::JOB, true )['status'] && ! $GLOBALS['requests'], 'REST publication ignored the opt-out.' );
     wp_set_current_user( 0 );
     $public = rest_do_request( new WP_REST_Request( 'GET', $route ) )->get_data();
-    expect_true( ! array_key_exists( BlackFury_Relay::OVERRIDE, (array) ( $public['meta'] ?? array() ) ), 'Routing data appeared in the public REST response.' );
+    expect_true( ! array_key_exists( BlackFury_Relay_Delivery::OVERRIDE, (array) ( $public['meta'] ?? array() ) ), 'Routing data appeared in the public REST response.' );
     return;
 }
 if ( 'relay-admin' === $case || 'relay-override' === $case ) {
     $_SERVER['REQUEST_METHOD'] = 'POST';
     $secret = 'https://discord.com/api/webhooks/234567890123456789/' . str_repeat( 'b', 30 );
-    $_POST = array( 'operation' => 'add', 'label' => 'Editorial fixtures', 'url' => $secret, '_wpnonce' => wp_create_nonce( BlackFury_Relay_Admin::ACTION ) );
+    $_POST = array( 'operation' => 'add', 'label' => 'Editorial fixtures', 'url' => $secret, '_wpnonce' => wp_create_nonce( BlackFury_Relay_Dashboard::ACTION ) );
     wp_set_current_user( $GLOBALS['subscriber_id'] );
     $rejected = false;
     try {
-        do_action( 'admin_post_' . BlackFury_Relay_Admin::ACTION );
+        do_action( 'admin_post_' . BlackFury_Relay_Dashboard::ACTION );
     } catch ( TestStop $e ) {
         $rejected = 403 === $e->status;
     }
-    expect_true( $rejected && ! BlackFury_Relay::channels(), 'Unauthorized user configured a destination.' );
+    expect_true( $rejected && ! BlackFury_Relay_Delivery::channels(), 'Unauthorized user configured a destination.' );
     wp_set_current_user( $GLOBALS['admin_id'] );
     try {
-        do_action( 'admin_post_' . BlackFury_Relay_Admin::ACTION );
+        do_action( 'admin_post_' . BlackFury_Relay_Dashboard::ACTION );
     } catch ( TestRedirect $e ) {
         expect_true( false !== strpos( $e->url, 'bfr_notice=saved' ), 'Channel was not added.' );
     }
-    $channels = BlackFury_Relay::channels();
+    $channels = BlackFury_Relay_Delivery::channels();
     $channel_id = array_key_first( $channels );
     expect_true( $secret === $channels[ $channel_id ]['url'], 'Channel URL did not persist.' );
     if ( 'relay-admin' === $case ) {
-        $_POST = array( 'operation' => 'test', 'channel' => $channel_id, '_wpnonce' => wp_create_nonce( BlackFury_Relay_Admin::ACTION ) );
+        $_POST = array( 'operation' => 'test', 'channel' => $channel_id, '_wpnonce' => wp_create_nonce( BlackFury_Relay_Dashboard::ACTION ) );
         try {
-            do_action( 'admin_post_' . BlackFury_Relay_Admin::ACTION );
+            do_action( 'admin_post_' . BlackFury_Relay_Dashboard::ACTION );
         } catch ( TestRedirect $e ) {
             expect_true( false !== strpos( $e->url, 'bfr_notice=test_ok' ), 'The UI did not acknowledge the connection test.' );
         }
@@ -88,7 +88,7 @@ if ( 'relay-admin' === $case || 'relay-override' === $case ) {
     wp_clear_scheduled_hook( 'blackfury_relay_deliver', array( $id ) );
     do_action( 'blackfury_relay_deliver', $id );
     expect_true( 1 === count( $GLOBALS['requests'] ) && $secret === strtok( $GLOBALS['requests'][0]['url'], '?' ), 'The editor choice saved at publication did not win.' );
-    delete_option( BlackFury_Relay::CHANNELS );
+    delete_option( BlackFury_Relay_Delivery::CHANNELS );
     return;
 }
 if ( 'relay-preview' === $case ) {
@@ -117,10 +117,10 @@ wp_clear_scheduled_hook( 'blackfury_relay_deliver', array( $id ) );
 if ( 'relay-lock' === $case ) {
     $key = 'blackfury_relay_lock_' . $id;
     add_option( $key, ( time() + 300 ) . ':fixture', '', false );
-    do_action( BlackFury_Relay::EVENT, $id );
-    expect_true( ! $GLOBALS['requests'] && wp_next_scheduled( BlackFury_Relay::EVENT, array( $id ) ), 'Contended cron event was lost or sent.' );
+    do_action( BlackFury_Relay_Delivery::EVENT, $id );
+    expect_true( ! $GLOBALS['requests'] && wp_next_scheduled( BlackFury_Relay_Delivery::EVENT, array( $id ) ), 'Contended cron event was lost or sent.' );
     delete_option( $key );
-    wp_clear_scheduled_hook( BlackFury_Relay::EVENT, array( $id ) );
+    wp_clear_scheduled_hook( BlackFury_Relay_Delivery::EVENT, array( $id ) );
 }
 do_action( 'blackfury_relay_deliver', $id );
 $job = get_post_meta( $id, '_blackfury_relay_delivery', true );
@@ -128,22 +128,22 @@ if ( 'relay-rate-limit' === $case ) {
     expect_true( 'pending' === $job['status'] && $job['next'] >= time() + 43, 'Discord rate limit was not respected.' );
     do_action( 'blackfury_relay_deliver', $id );
     expect_true( 1 === count( $GLOBALS['requests'] ), 'Early rerun ignored Retry-After.' );
-    expect_true( ! get_post_meta( $id, '_wp_discord_post_published', true ), 'Rate limit marked the post as sent.' );
+    expect_true( ! get_post_meta( $id, '_blackfury_relay_published', true ), 'Rate limit marked the post as sent.' );
 } elseif ( 'relay-uncertain' === $case ) {
     expect_true( 'uncertain' === $job['status'], 'A network timeout must be reported as uncertain.' );
     do_action( 'blackfury_relay_deliver', $id );
     expect_true( 1 === count( $GLOBALS['requests'] ), 'An uncertain delivery was retried automatically.' );
-    $handler = array_values( $GLOBALS['wp_filter'][ BlackFury_Relay::EVENT ]->callbacks[10] )[0]['function'][0];
+    $handler = array_values( $GLOBALS['wp_filter'][ BlackFury_Relay_Delivery::EVENT ]->callbacks[10] )[0]['function'][0];
     expect_true( false === $handler->retry( $id, false ), 'Uncertain delivery allowed a blind retry.' );
     expect_true( true === $handler->retry( $id, true ), 'Explicit uncertain retry was not queued.' );
     $status = 200;
-    do_action( BlackFury_Relay::EVENT, $id );
-    expect_true( 2 === count( $GLOBALS['requests'] ) && 'accepted' === get_post_meta( $id, BlackFury_Relay::JOB, true )['status'], 'Explicit retry did not resolve the delivery.' );
+    do_action( BlackFury_Relay_Delivery::EVENT, $id );
+    expect_true( 2 === count( $GLOBALS['requests'] ) && 'accepted' === get_post_meta( $id, BlackFury_Relay_Delivery::JOB, true )['status'], 'Explicit retry did not resolve the delivery.' );
 } elseif ( 'relay-skip' === $case || 'relay-private' === $case ) {
     expect_true( 'skipped' === $job['status'] && 0 === count( $GLOBALS['requests'] ), 'Per-article opt-out did not suppress delivery.' );
 } else {
     expect_true( 'accepted' === $job['status'] && '123456789012345678' === $job['message'], 'Discord acceptance was not recorded.' );
-    expect_true( 'yes' === get_post_meta( $id, '_wp_discord_post_published', true ), 'Legacy sent marker missing.' );
+    expect_true( 'yes' === get_post_meta( $id, '_blackfury_relay_published', true ), 'Legacy sent marker missing.' );
     expect_true( 1 === count( $GLOBALS['requests'] ), 'Wrong request count.' );
     $request = $GLOBALS['requests'][0];
     expect_true( false !== strpos( $request['url'], 'wait=true' ), 'Did not request Discord acknowledgement.' );

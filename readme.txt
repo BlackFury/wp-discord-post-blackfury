@@ -3,7 +3,7 @@ Contributors: nicolamustone
 Tags: discord, post, publish, server, chat, gaming, streaming, twitch, community, blog, woocommerce, contact form 7, jetpack
 Requires at least: 5.8
 Requires PHP: 7.4
-Stable tag: 2.2.0-beta.1
+Stable tag: 2.2.0-beta.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -16,8 +16,11 @@ The 2.2 beta adds webhook-only article delivery, saved-draft previews, category 
 per-article opt-out, and a delivery journal. See docs/RELAY.md for the beta guide.
 Version 2.1.1 replaces the unsafe meme GET link with a capability- and nonce-protected POST action,
 uses HTTPS for Giphy and omits private request data from debug logs.
-Keep the folder wp-discord-post and the existing database settings when upgrading.
-Update URI is false: no WordPress.org updates and no automatic GitHub updater.
+BlackFury Relay installs independently under blackfury-relay. Deactivate the
+old plugin without deleting it, then use BlackFury Relay > Migration to import
+settings and sent markers. This importer is scheduled for removal in 2.5.
+WordPress can discover newer stable GitHub Releases and install them when automatic
+updates are enabled for Relay. Beta releases use manual ZIP installation.
 See README.md and docs for the audit, exact test scope, deployment and rollback.
 The legacy integration descriptions below are retained from upstream, not a claim of current compatibility.
 
@@ -38,13 +41,13 @@ WP Discord Post is also compatible with WooCommerce, sending a new message to Di
 WP Discord Post supports any post type, with a bit of custom code. If you want to send a message for your custom post type add this code to your **functions.php** file in **wp-content/themes/your-child-theme-name/**:
 
 `
-add_action( 'publish_{post_type}', array( WP_Discord_Post::instance()->post, 'send' ), 10, 2 );
+add_action( 'publish_{post_type}', array( BlackFury_Relay_Plugin::instance()->post, 'send' ), 10, 2 );
 `
 
 Make sure to replace `{post_type}` with the slug of the post type that you want to use, for example if you registered a post type `book` you would use:
 
 `
-add_action( 'publish_book', array( WP_Discord_Post::instance()->post, 'send' ), 10, 2 );
+add_action( 'publish_book', array( BlackFury_Relay_Plugin::instance()->post, 'send' ), 10, 2 );
 `
 
 = Privacy Info =
@@ -65,28 +68,28 @@ WP Discord Post comes with some hooks that you can use to customize how the plug
 
 **Filters**
 
-* `wp_discord_post_post_content`
-* `wp_discord_post_post_embed`
-* `wp_discord_post_embed_image_size`
-* `wp_discord_post_woocommerce_order_content`
-* `wp_discord_post_allowed_order_statuses`
-* `wp_discord_post_product_embed`
-* `wp_discord_post_order_embed`
-* `wp_discord_post_{context}_webhook_url`
-* `wp_discord_post_webhook_url`
-* `wp_discord_post_request_body_args`
-* `wp_discord_post_request_args`
-* `wp_discord_post_process_old_posts`
-* `wp_discord_post_is_new_post`
-* `wp_discord_post_meme_tag`
-* `wp_discord_post_meme_rating`
-* `wp_discord_post_embed_enabled`
+* `blackfury_relay_post_post_content`
+* `blackfury_relay_post_post_embed`
+* `blackfury_relay_post_embed_image_size`
+* `blackfury_relay_post_woocommerce_order_content`
+* `blackfury_relay_post_allowed_order_statuses`
+* `blackfury_relay_post_product_embed`
+* `blackfury_relay_post_order_embed`
+* `blackfury_relay_post_{context}_webhook_url`
+* `blackfury_relay_post_webhook_url`
+* `blackfury_relay_post_request_body_args`
+* `blackfury_relay_post_request_args`
+* `blackfury_relay_post_process_old_posts`
+* `blackfury_relay_post_is_new_post`
+* `blackfury_relay_post_meme_tag`
+* `blackfury_relay_post_meme_rating`
+* `blackfury_relay_post_embed_enabled`
 
 **Actions**
 
-* `wp_discord_post_init`
-* `wp_discord_post_before_request`
-* `wp_discord_post_after_request`
+* `blackfury_relay_post_init`
+* `blackfury_relay_post_before_request`
+* `blackfury_relay_post_after_request`
 
 = Roadmap =
 
@@ -104,21 +107,18 @@ WP Discord Post comes with some hooks that you can use to customize how the plug
 
 = Minimum Requirements =
 
-* PHP version 7.0 or greater.
-
-= Automatic installation =
-
-Automatic installation is the easiest option as WordPress handles the file transfers itself and you don’t need to leave your web browser. To do an automatic install of WP Discord Post, log in to your WordPress dashboard, navigate to the Plugins menu and click Add New.
-
-In the search field type “WP Discord Post” and click Search Plugins. Once you’ve found the plugin you can view details about it such as the point release, rating and description. Most importantly of course, you can install it by simply clicking “Install Now”.
+* WordPress 5.8 and PHP 7.4 or newer.
 
 = Manual installation =
 
-The manual installation method involves downloading this plugin and uploading it to your web-server via your favourite FTP application. The WordPress codex contains [instructions on how to do this here](https://codex.wordpress.org/Managing_Plugins#Manual_Plugin_Installation).
+Download the BlackFury Relay installable ZIP. Upload it in WordPress under
+Plugins > Add New > Upload Plugin. Use the migration screen when switching
+from WP Discord Post.
 
 = Updating =
 
-Automatic updates should work like a charm; as always though, ensure you backup your site just in case.
+Stable releases appear in WordPress when a newer verified ZIP is published on GitHub.
+Automatic installation is enabled per plugin in the WordPress Plugins screen.
 
 == Changelog ==
 

@@ -5,10 +5,21 @@ BlackFury Relay est un fork GPL de WP Discord Post par Nicola Mustone. La bêta 
 ## Installer et essayer
 
 1. Sur une copie de préproduction, faire une sauvegarde en suivant [DEPLOYMENT.md](DEPLOYMENT.md). Utiliser un webhook Discord réservé aux essais.
-2. Installer le ZIP BlackFury Relay. Si WP Discord Post ou sa version BlackFury 2.1.1 est déjà présent, le désactiver puis remplacer son dossier `wp-discord-post` sans désinstaller. Le fichier principal, les options existantes et les anciens marqueurs d'envoi gardent la même identité.
-3. Ouvrir **BlackFury Relay** dans l'administration. Ajouter un salon, utiliser **Send test**, puis sélectionner un salon par défaut. Le choix **Existing webhook** utilise les réglages hérités. Les nouveaux webhooks officiels Discord s'utilisent directement par HTTPS, sans jeton de bot.
-4. Associer des catégories à des salons. Dans le panneau BlackFury Relay de l'éditeur de blocs ou la boîte de l'éditeur classique, choisir un salon, garder le routage automatique ou désactiver la notification de l'article.
-5. Vérifier le message dans Discord et dans le journal. Tester aussi une publication programmée et une modification d'article après son envoi.
+2. Si WP Discord Post, le fork 2.1.1 ou Relay 2.2 bêta.1 est déjà présent, désactiver cette extension **sans la désinstaller**. Installer puis activer le nouveau ZIP, qui a son propre dossier `blackfury-relay`.
+3. Ouvrir **BlackFury Relay → Migration**, puis cliquer sur **Import or continue** jusqu'à confirmation. L'import copie les réglages du site courant et les marqueurs issus de l'extension historique. Les valeurs déjà configurées dans Relay priment, même si elles sont vides. Les données de l'ancienne extension restent en place. Pour un multisite, répéter par site après désactivation de l'extension d'origine aux niveaux concernés.
+4. Ouvrir **BlackFury Relay**. Ajouter un salon, utiliser **Send test**, puis sélectionner un salon par défaut. **Existing webhook** utilise les réglages importés. Les nouveaux webhooks officiels Discord s'utilisent directement par HTTPS, sans jeton de bot.
+5. Associer des catégories à des salons. Dans le panneau BlackFury Relay de l'éditeur de blocs ou la boîte de l'éditeur classique, choisir un salon, garder le routage automatique ou désactiver la notification de l'article.
+6. Vérifier le message dans Discord et dans le journal. Tester aussi une publication programmée et une modification d'article après son envoi.
+
+L'import et les sorties de Relay sont bloqués tant que l'ancienne extension est active sous son chemin standard `wp-discord-post/wp-discord-post.php`. Si l'ancien dossier a été renommé, vérifier sa désactivation manuellement. Suspendre les publications et les entrées d'intégrations pendant le basculement. Les hooks PHP personnalisés nommés `wp_discord_*` doivent être adaptés au nouveau préfixe `blackfury_relay_*`.
+
+## Mises à jour
+
+Une fois Relay installé, WordPress propose les versions stables plus récentes depuis le dépôt GitHub BlackFury. Une version doit être publiée comme release stable avec un tag `vX.Y.Z` et un fichier `blackfury-relay-X.Y.Z.zip` attaché. Un tag Git ou l'archive « Source code » ne suffit pas. Les préversions ne rejoignent pas ce canal. Le ZIP est vérifié par SHA-256 et doit porter le dossier, le fichier principal, la version et l'identité de Relay attendus.
+
+Pour laisser WordPress installer seul les futures versions stables, activer **Mises à jour automatiques** pour BlackFury Relay dans **Extensions → Extensions installées**. La première transition depuis WP Discord Post reste une installation et un import manuels.
+
+**Rappel version 2.5.0.** Retirer l'importeur temporaire et adapter les tests et la documentation avant publication. Sur un site où l'import est en cours, Relay retient la mise à jour vers 2.5 jusqu'à la fin de la migration. En multisite, vérifier tous les sites avant la mise à jour des fichiers partagés. Les installations ayant déjà migré continueront à utiliser les options et marqueurs propres à Relay.
 
 ## Routage et aperçu
 
@@ -28,6 +39,6 @@ Le journal présente l'état courant des 50 derniers articles suivis. Il ne stoc
 
 ## Retour à 2.1.1
 
-Relever les tâches en attente, désactiver la bêta et suivre le [retour arrière](DEPLOYMENT.md). Les marqueurs des notifications acceptées restent en base. La version 2.1.1 ne traite pas les tâches Relay. Vérifier chaque tâche en attente ou incertaine dans Discord avant de décider de la relancer.
+Relever les tâches en attente, désactiver Relay et réactiver l'ancienne extension si son usage est nécessaire et sécurisé. Les réglages d'origine sont préservés. Les marqueurs écrits depuis la migration restent propres à Relay. Avant de reprendre les envois avec l'ancienne extension, réconcilier ces messages avec Discord pour éviter des doublons.
 
 Les tests de cette bêta interceptent le réseau. Ils ne valident pas la réception sur un serveur Discord réel.

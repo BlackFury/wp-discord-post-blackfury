@@ -5,7 +5,7 @@ if ( ! $root || ! is_file( $root . '/.blackfury-test-only' ) ) {
 }
 define( 'WP_ADMIN', true );
 $_SERVER['HTTP_HOST'] = 'localhost';
-$_SERVER['REQUEST_URI'] = '/wp-admin/options-general.php?page=wp-discord-post';
+$_SERVER['REQUEST_URI'] = '/wp-admin/options-general.php?page=blackfury-relay-advanced';
 $_SERVER['REQUEST_METHOD'] = 'GET';
 require $root . '/wp-load.php';
 require_once ABSPATH . 'wp-admin/includes/admin.php';
@@ -49,28 +49,28 @@ add_filter( 'pre_http_request', function ( $pre, $args, $url ) {
 
 // All of these are synthetic fixtures, never account credentials.
 $GLOBALS['fixture_options'] = array(
-    'wp_discord_post_bot_username' => 'Synthetic BlackFury',
-    'wp_discord_post_avatar_url' => 'https://example.invalid/avatar.png',
-    'wp_discord_post_bot_token' => 'synthetic-test-token',
-    'wp_discord_post_webhook_url' => 'https://example.invalid/synthetic-webhook',
-    'wp_discord_post_post_webhook_url' => 'https://example.invalid/post-fixture',
-    'wp_discord_post_message_format' => '%title% — %author% — %url%',
-    'wp_discord_post_giphy_api_key' => 'synthetic-test-key',
-    'wp_discord_post_logging' => '',
-    'wp_discord_post_mention_everyone' => '',
-    'wp_discord_post_disable_embed' => 'yes',
-    'wp_discord_enabled_for_cf7' => 'yes',
-    'wp_discord_enabled_for_jetpack_cf' => 'yes',
-    'wp_discord_enabled_for_gf' => 'yes',
-    'wp_discord_enabled_for_woocommerce' => 'yes',
-    'wp_discord_enabled_for_woocommerce_products' => 'yes',
-    'wp_discord_post_cf7_webhook_url' => 'https://example.invalid/cf7',
-    'wp_discord_post_jetpack_webhook_url' => 'https://example.invalid/jetpack',
-    'wp_discord_post_gf_webhook_url' => 'https://example.invalid/gf',
-    'wp_discord_post_product_webhook_url' => 'https://example.invalid/products',
-    'wp_discord_post_order_webhook_url' => 'https://example.invalid/orders',
-    'wp_discord_product_message_format' => '%title% %price%',
-    'wp_discord_order_message_format' => '%order_number% %order_total%',
+    'blackfury_relay_post_bot_username' => 'Synthetic BlackFury',
+    'blackfury_relay_post_avatar_url' => 'https://example.invalid/avatar.png',
+    'blackfury_relay_post_bot_token' => 'synthetic-test-token',
+    'blackfury_relay_post_webhook_url' => 'https://example.invalid/synthetic-webhook',
+    'blackfury_relay_post_post_webhook_url' => 'https://example.invalid/post-fixture',
+    'blackfury_relay_post_message_format' => '%title% — %author% — %url%',
+    'blackfury_relay_post_giphy_api_key' => 'synthetic-test-key',
+    'blackfury_relay_post_logging' => '',
+    'blackfury_relay_post_mention_everyone' => '',
+    'blackfury_relay_post_disable_embed' => 'yes',
+    'blackfury_relay_enabled_for_cf7' => 'yes',
+    'blackfury_relay_enabled_for_jetpack_cf' => 'yes',
+    'blackfury_relay_enabled_for_gf' => 'yes',
+    'blackfury_relay_enabled_for_woocommerce' => 'yes',
+    'blackfury_relay_enabled_for_woocommerce_products' => 'yes',
+    'blackfury_relay_post_cf7_webhook_url' => 'https://example.invalid/cf7',
+    'blackfury_relay_post_jetpack_webhook_url' => 'https://example.invalid/jetpack',
+    'blackfury_relay_post_gf_webhook_url' => 'https://example.invalid/gf',
+    'blackfury_relay_post_product_webhook_url' => 'https://example.invalid/products',
+    'blackfury_relay_post_order_webhook_url' => 'https://example.invalid/orders',
+    'blackfury_relay_product_message_format' => '%title% %price%',
+    'blackfury_relay_order_message_format' => '%order_number% %order_total%',
 );
 foreach ( $GLOBALS['fixture_options'] as $key => $value ) { update_option( $key, $value ); }
 delete_option( 'blackfury_relay_channels' );
@@ -82,16 +82,16 @@ wp_set_current_user( $GLOBALS['admin_id'] );
 
 function load_subject() {
     $plugin = getenv( 'WPDISCORD_PLUGIN_DIR' ) ?: dirname( __DIR__ );
-    require $plugin . '/wp-discord-post.php';
+    require $plugin . '/blackfury-relay.php';
 }
 function action_callback() {
     global $wp_filter;
-    $hook = 'admin_post_wp_discord_post_send_dank_meme';
+    $hook = 'admin_post_blackfury_relay_post_send_dank_meme';
     if ( isset( $wp_filter[ $hook ] ) ) {
         foreach ( $wp_filter[ $hook ]->callbacks as $callbacks ) {
             foreach ( $callbacks as $callback ) { return $callback['function']; }
         }
     }
     // Also exercise the original method so RED proves its missing protections.
-    return array( new WP_Discord_Post_Dank_Meme(), 'send' );
+    return array( new BlackFury_Relay_Plugin_Dank_Meme(), 'send' );
 }
